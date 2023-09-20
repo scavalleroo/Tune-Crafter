@@ -4,7 +4,21 @@ import viteLogo from '/vite.svg'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
+
+  return (
+    <>
+      <h1>Hello World</h1>
+      <button>Activate gesture demo</button>
+      <button>Activate speech recognition demo</button>
+    </>
+  )
+}
+
+export default App
+
+
+/**
+ const [count, setCount] = useState(0)
 
   return (
     <>
@@ -29,7 +43,4 @@ function App() {
         Click on the Vite and React logos to learn more
       </p>
     </>
-  )
-}
-
-export default App
+ */
