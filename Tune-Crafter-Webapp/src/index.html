@@ -5,16 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Smartwatch Data Web App</title>
     <link rel="stylesheet" href="styles.css">
+    <!--<script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/vision_bundle.js"
+    crossorigin="anonymous"></script> -->
 </head>
 <body>
-    <header>
-        <h1>Smartwatch Data Web App</h1>
-    </header>
-    <main>
-        <div id="data-container">
-            <!-- Real-time data from the smartwatch will be displayed here -->
-        </div>
-    </main>
-    <script src="app.ts"></script>
+    <input type="file" id="file-input" />
+    <div id="image-wrapper" style="height: 400px; width: 400px; position: relative;"></div>
+    <script src="app.js"></script>
 </body>
 </html>
+
