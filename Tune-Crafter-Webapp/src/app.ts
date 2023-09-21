@@ -20,6 +20,7 @@ import {
   
 
 
+  /*
   console.log('Hello world!')
 
   //const demosSection = document.getElementById("demos")!; //"!" to indicate is not gonna be null 
@@ -29,7 +30,6 @@ import {
   let webcamRunning: Boolean = false;
   const videoHeight = "360px";
   const videoWidth = "480px";
-  let int : number = 4;
 
 
   // Before we can use HandLandmarker class we must wait for it to finish
@@ -178,6 +178,8 @@ import {
 
   }
 
+  */
+
 
   /**  IMAGE PROCESSOR
     let lastVideoTime = -1;
@@ -201,10 +203,7 @@ import {
 
 
 
-
-
-
-    /*
+  
 // Import the required APIs
 import { ObjectDetector } from '@mediapipe/tasks-vision';
 
@@ -217,14 +216,14 @@ const imageWrapper = document.getElementById('image-wrapper')!;
 const createObjectDetector = async () => {
   // Fetch the wasm files from CDN for vision task.
   const vision = await FilesetResolver.forVisionTasks(
-    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
+    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.6/wasm"
   );
 
   // Create and return the `ObjectDetector`.
   return await ObjectDetector.createFromOptions(vision, {
     baseOptions: {
       // Path to the trained model.
-      modelAssetPath: `/models/model.tflite`
+      modelAssetPath: `./shared/models/efficientdet_lite0.tflite`
     },
     // Minimum score the detector should look for between 0 to 1.
     scoreThreshold: 0.5,
@@ -298,5 +297,3 @@ document.addEventListener('DOMContentLoaded', () => {
       })
     })
 })
-
-*/

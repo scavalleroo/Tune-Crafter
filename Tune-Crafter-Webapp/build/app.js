@@ -1,16 +1,36 @@
 "use strict";
 // Copyright 2023 The MediaPipe Authors.
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-console.log('Hello world!');
-const demosSection = document.getElementById("demos"); //"!" to indicate is not gonna be null 
-let gestureRecognizer;
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//      http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+const tasks_vision_1 = require("@mediapipe/tasks-vision");
+/*
+console.log('Hello world!')
+
+//const demosSection = document.getElementById("demos")!; //"!" to indicate is not gonna be null
+let gestureRecognizer: GestureRecognizer;
 let runningMode = "VIDEO";
-let enableWebcamButton;
-let webcamRunning = false;
+let enableWebcamButton: HTMLButtonElement;
+let webcamRunning: Boolean = false;
 const videoHeight = "360px";
 const videoWidth = "480px";
-let int = 4;
-/*
+
 
 // Before we can use HandLandmarker class we must wait for it to finish
 // loading. Machine Learning models can be large and take a moment to
@@ -37,7 +57,7 @@ const createGestureRecognizer = async () => {
   });
 
   
-  demosSection.classList.remove("invisible");
+  //demosSection.classList.remove("invisible");
   
 };
 createGestureRecognizer();
@@ -157,8 +177,9 @@ async function predictWebcam() {
 
 
 }
+
 */
-/**
+/**  IMAGE PROCESSOR
   let lastVideoTime = -1;
   function renderLoop(): void {
   const video = document.getElementById("video");
@@ -174,99 +195,76 @@ async function predictWebcam() {
   });
   }
    */
-/*
 // Import the required APIs
-import { ObjectDetector } from '@mediapipe/tasks-vision';
-
+const tasks_vision_2 = require("@mediapipe/tasks-vision");
 // Get the DOM Elements.
-const fileInput : any = document.getElementById('file-input')!;
-const imageWrapper = document.getElementById('image-wrapper')!;
-
+const fileInput = document.getElementById('file-input');
+const imageWrapper = document.getElementById('image-wrapper');
 // This asynchronous function is resposible for creating
 // the `ObjectDetector` object.
-const createObjectDetector = async () => {
-// Fetch the wasm files from CDN for vision task.
-const vision = await FilesetResolver.forVisionTasks(
-"https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
-);
-
-// Create and return the `ObjectDetector`.
-return await ObjectDetector.createFromOptions(vision, {
-baseOptions: {
-  // Path to the trained model.
-  modelAssetPath: `/models/model.tflite`
-},
-// Minimum score the detector should look for between 0 to 1.
-scoreThreshold: 0.5,
-// Either `IMAGE` or `VIDEO`.
-runningMode: 'IMAGE'
+const createObjectDetector = () => __awaiter(void 0, void 0, void 0, function* () {
+    // Fetch the wasm files from CDN for vision task.
+    const vision = yield tasks_vision_1.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.6/wasm");
+    // Create and return the `ObjectDetector`.
+    return yield tasks_vision_2.ObjectDetector.createFromOptions(vision, {
+        baseOptions: {
+            // Path to the trained model.
+            modelAssetPath: `./shared/models/efficientdet_lite0.tflite`
+        },
+        // Minimum score the detector should look for between 0 to 1.
+        scoreThreshold: 0.5,
+        // Either `IMAGE` or `VIDEO`.
+        runningMode: 'IMAGE'
+    });
 });
-};
-
-
 document.addEventListener('DOMContentLoaded', () => {
-createObjectDetector().then(detector => {
-  fileInput.addEventListener('input', () => {
-  
-    while(imageWrapper.firstChild) {
-      imageWrapper.removeChild(imageWrapper.firstChild)
-    }
-
-    const file = fileInput.files[0]
-    const image = new Image()
-    const dataUrl = URL.createObjectURL(file)
-
-    image.onload = () => {
-      image.style.height = '100%'
-      image.style.width = '100%'
-      imageWrapper.append(image)
-
-      // `ObjectDetector` operates on the natural height and width of
-      // the image. We need to calculate the ratio of the rendered image's
-      // height/width and naturalHeight/naturalWidth.
-      const heightRatio = image.height / image.naturalHeight
-      const widthRatio = image.width / image.naturalWidth
-
-      
-      const result = detector.detect(image)
-
-      // Take all the detections and draw bounding box with label.
-      result.detections.forEach(detection => {
-        // A `div` element for bounding box.
-        const box = document.createElement('div')
-
-        box.style.position = 'absolute'
-        box.style.border = '2px solid red'
-        // Notice how we are using the calculated ratios to preserve
-        // the sizing and coordinate of the detection.
-        box.style.left = `${detection.boundingBox!.originX * widthRatio}px`
-        box.style.top = `${detection.boundingBox!.originY * heightRatio}px`
-        box.style.height = `${detection.boundingBox!.height * heightRatio}px`
-        box.style.width = `${detection.boundingBox!.width * widthRatio}px`
-        
-        // Extract the name of the detection and score.
-        const labelName = detection.categories[0].categoryName
-        const scorePercentage = Math.round(detection.categories[0].score * 100)
-        
-        // A `small` element for the label.
-        const label = document.createElement('small')
-
-        label.style.position = 'absolute'
-        label.style.top = '-16px'
-        label.style.left = '0'
-        label.style.color = 'white'
-        label.style.backgroundColor = 'red'
-        label.textContent = `${labelName} ${scorePercentage}%`
-
-        // Finally append the elements.
-        box.append(label)
-        imageWrapper.append(box)
-      })
-    }
-
-    image.src = dataUrl
-  })
-})
-})
-
-*/ 
+    createObjectDetector().then(detector => {
+        fileInput.addEventListener('input', () => {
+            while (imageWrapper.firstChild) {
+                imageWrapper.removeChild(imageWrapper.firstChild);
+            }
+            const file = fileInput.files[0];
+            const image = new Image();
+            const dataUrl = URL.createObjectURL(file);
+            image.onload = () => {
+                image.style.height = '100%';
+                image.style.width = '100%';
+                imageWrapper.append(image);
+                // `ObjectDetector` operates on the natural height and width of
+                // the image. We need to calculate the ratio of the rendered image's
+                // height/width and naturalHeight/naturalWidth.
+                const heightRatio = image.height / image.naturalHeight;
+                const widthRatio = image.width / image.naturalWidth;
+                const result = detector.detect(image);
+                // Take all the detections and draw bounding box with label.
+                result.detections.forEach(detection => {
+                    // A `div` element for bounding box.
+                    const box = document.createElement('div');
+                    box.style.position = 'absolute';
+                    box.style.border = '2px solid red';
+                    // Notice how we are using the calculated ratios to preserve
+                    // the sizing and coordinate of the detection.
+                    box.style.left = `${detection.boundingBox.originX * widthRatio}px`;
+                    box.style.top = `${detection.boundingBox.originY * heightRatio}px`;
+                    box.style.height = `${detection.boundingBox.height * heightRatio}px`;
+                    box.style.width = `${detection.boundingBox.width * widthRatio}px`;
+                    // Extract the name of the detection and score.
+                    const labelName = detection.categories[0].categoryName;
+                    const scorePercentage = Math.round(detection.categories[0].score * 100);
+                    // A `small` element for the label.
+                    const label = document.createElement('small');
+                    label.style.position = 'absolute';
+                    label.style.top = '-16px';
+                    label.style.left = '0';
+                    label.style.color = 'white';
+                    label.style.backgroundColor = 'red';
+                    label.textContent = `${labelName} ${scorePercentage}%`;
+                    // Finally append the elements.
+                    box.append(label);
+                    imageWrapper.append(box);
+                });
+            };
+            image.src = dataUrl;
+        });
+    });
+});
