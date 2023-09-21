@@ -15,8 +15,9 @@
 import {
     GestureRecognizer,
     FilesetResolver,
-    DrawingUtils
-  } from "@mediapipe/tasks-vision";
+    DrawingUtils,
+    ObjectDetector
+  } from "../node_modules/@mediapipe/tasks-vision";
   
 
 
@@ -205,11 +206,11 @@ import {
 
   
 // Import the required APIs
-import { ObjectDetector } from '@mediapipe/tasks-vision';
+//import { ObjectDetector } from '@mediapipe/tasks-vision';
 
 // Get the DOM Elements.
-const fileInput : any = document.getElementById('file-input')!;
-const imageWrapper = document.getElementById('image-wrapper')!;
+const fileInput = document.getElementById('file-input');
+const imageWrapper = document.getElementById('image-wrapper');
 
 // This asynchronous function is resposible for creating
 // the `ObjectDetector` object.
@@ -268,10 +269,10 @@ document.addEventListener('DOMContentLoaded', () => {
             box.style.border = '2px solid red'
             // Notice how we are using the calculated ratios to preserve
             // the sizing and coordinate of the detection.
-            box.style.left = `${detection.boundingBox!.originX * widthRatio}px`
-            box.style.top = `${detection.boundingBox!.originY * heightRatio}px`
-            box.style.height = `${detection.boundingBox!.height * heightRatio}px`
-            box.style.width = `${detection.boundingBox!.width * widthRatio}px`
+            box.style.left = `${detection.boundingBox.originX * widthRatio}px`
+            box.style.top = `${detection.boundingBox.originY * heightRatio}px`
+            box.style.height = `${detection.boundingBox.height * heightRatio}px`
+            box.style.width = `${detection.boundingBox.width * widthRatio}px`
             
             // Extract the name of the detection and score.
             const labelName = detection.categories[0].categoryName
