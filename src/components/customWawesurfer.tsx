@@ -1,0 +1,56 @@
+import React, { useEffect, useRef } from 'react';
+import { WaveSurfer } from 'wavesurfer-react/dist/utils/createWavesurfer';
+
+
+interface WaveformProps {
+  audioUrl: string;
+}
+
+const Waveform = React.forwardRef<WaveSurfer | null, WaveformProps>(
+  ({ audioUrl }, ref) => {
+    const wavesurferRef = useRef<WaveSurfer | null>(null);
+
+    useEffect(() => {
+      const wavesurfer = WaveSurfer.create({
+        container: '#waveform',
+        waveColor: 'violet',
+        progressColor: 'purple',
+      });
+
+      wavesurfer.load(audioUrl);
+      wavesurferRef.current = wavesurfer;
+
+      return () => {
+        if (wavesurferRef.current) {
+          wavesurferRef.current.destroy();
+        }
+      };
+    }, [audioUrl]);
+
+    const handlePlay = () => {
+      if (wavesurferRef.current) {
+        wavesurferRef.current.playPause();
+      }
+    };
+
+    // Assign the handlePlay function to the ref
+    useEffect(() => {
+      if (ref) {
+        if (typeof ref === 'function') {
+          ref(wavesurferRef.current);
+        } else {
+          ref.current = wavesurferRef.current;
+        }
+      }
+    }, [ref]);
+
+    return (
+      <div>
+        <div id="waveform" style={{ height: '50px' }}></div>
+        <button onClick={handlePlay}>Play/Pause</button>
+      </div>
+    );
+  }
+);
+
+export default Waveform;
