@@ -17,11 +17,24 @@ function App() {
   var waitForOpenHand: Boolean = true;
   var startCuttingLeft: Boolean = false;
   var closedCutLeft: Boolean = false;
-  var startDrumHitRight: Boolean = false;
+  var startDrumHitLeft: Boolean = false;
   // var cuttedLeft: Boolean = false;
   // var startCuttingRight: Boolean = false;
   // var closedCutRight: Boolean = false;
   // var cuttedCompleted: Boolean = false;
+
+  const audioUrl = 'assets/audio.mp3';
+  const audioBassdrum = new Audio('assets/bassdrum.mp3');
+  audioBassdrum.preload = 'auto'; // Preload the audio file
+  const audioSnare = new Audio('assets/dubstep-snare-drum.mp3');
+  audioSnare.preload = 'auto'; // Preload the audio file
+  const audioElecribe = new Audio('assets/electribe-hats.mp3');
+  audioElecribe.preload = 'auto'; // Preload the audio file
+  const audioClap = new Audio('assets/mega-clap.mp3');
+  audioClap.preload = 'auto'; // Preload the audio file
+  
+  const waveformRef = useRef<WaveSurfer | null>(null);
+  let wsRegions: any = null;
 
   useEffect(() => {
     let gestureRecognizer: GestureRecognizer;
@@ -169,64 +182,51 @@ function App() {
     function detectAction(categoryName: string, categoryScore: any, handedness: string, landmarks: any) {
       
       //DRUMS detect and managing
-      if(!startDrumHitRight && categoryName == "Open_Palm" && handedness == "Left" && categoryScore > 50) {
-        startDrumHitRight = true;  
-        console.warn("startDrumHitRight = true");
+      if(!startDrumHitLeft && categoryName == "Open_Palm" && handedness == "Left" && categoryScore > 50) {
+        startDrumHitLeft = true;  
+        console.warn("startDrumHitLeft = true");
       }
       //Index finger action
-      if(startDrumHitRight && handedness == "Left" && closedPoints(landmarks[8], landmarks[4])) {
+      if(startDrumHitLeft && handedness == "Left" && closedPoints(landmarks[8], landmarks[4])) {
         //Play the sound
         console.warn("Index finger action");
 
-        startDrumHitRight = false;  
-
-        // Create an Audio object
-        const audio = new Audio('assets/dubstep-snare-drum.mp3');
+        startDrumHitLeft = false;  
 
         // Play the audio in the background
-        audio.play();
+        audioBassdrum.play();
 
       }
       //Middle finger action
-      if(startDrumHitRight && handedness == "Left" && closedPoints(landmarks[12], landmarks[4])) {
+      if(startDrumHitLeft && handedness == "Left" && closedPoints(landmarks[12], landmarks[4])) {
         //Play the sound
         console.warn("Middle finger action");
 
-        startDrumHitRight = false;  
-
-        // Create an Audio object
-        const audio = new Audio('assets/bassdrum.mp3');
+        startDrumHitLeft = false;  
 
         // Play the audio in the background
-        audio.play();
+        audioSnare.play();
 
       }
       //Ring Finger action 
-      if(startDrumHitRight && handedness == "Left" && closedPoints(landmarks[16], landmarks[4])) {
+      if(startDrumHitLeft && handedness == "Left" && closedPoints(landmarks[16], landmarks[4])) {
         //Play the sound
         console.warn("Ring Finger action ");
 
-        startDrumHitRight = false;  
-
-        // Create an Audio object
-        const audio = new Audio('assets/electribe-hats.mp3');
+        startDrumHitLeft = false;  
 
         // Play the audio in the background
-        audio.play();
+        audioElecribe.play();
 
       }
       //Pinky Finger action
-      if(startDrumHitRight && handedness == "Left" && closedPoints(landmarks[20], landmarks[4])) {
+      if(startDrumHitLeft && handedness == "Left" && closedPoints(landmarks[20], landmarks[4])) {
         //Play the sound
         console.warn("Pinky Finger action");
 
-        startDrumHitRight = false;  
-
-        // Create an Audio object
-        const audio = new Audio('assets/mega-clap.mp3');
-
+        startDrumHitLeft = false;  
         // Play the audio in the background
-        audio.play();
+        audioClap.play();
 
       }
 
@@ -283,10 +283,6 @@ function App() {
       return false;
     }
   }, []);
-
-  const audioUrl = 'assets/audio.mp3';
-  const waveformRef = useRef<WaveSurfer | null>(null);
-  let wsRegions: any = null;
 
   return (
     <>
