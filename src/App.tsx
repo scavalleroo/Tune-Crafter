@@ -17,6 +17,7 @@ function App() {
   var waitForOpenHand: Boolean = true;
   var startCuttingLeft: Boolean = false;
   var closedCutLeft: Boolean = false;
+  var startDrumHitRight: Boolean = false;
   // var cuttedLeft: Boolean = false;
   // var startCuttingRight: Boolean = false;
   // var closedCutRight: Boolean = false;
@@ -166,6 +167,71 @@ function App() {
     }
 
     function detectAction(categoryName: string, categoryScore: any, handedness: string, landmarks: any) {
+      
+      //DRUMS detect and managing
+      if(!startDrumHitRight && categoryName == "Open_Palm" && handedness == "Left" && categoryScore > 50) {
+        startDrumHitRight = true;  
+        console.warn("startDrumHitRight = true");
+      }
+      //Index finger action
+      if(startDrumHitRight && handedness == "Left" && closedPoints(landmarks[8], landmarks[4])) {
+        //Play the sound
+        console.warn("Index finger action");
+
+        startDrumHitRight = false;  
+
+        // Create an Audio object
+        const audio = new Audio('assets/dubstep-snare-drum.mp3');
+
+        // Play the audio in the background
+        audio.play();
+
+      }
+      //Middle finger action
+      if(startDrumHitRight && handedness == "Left" && closedPoints(landmarks[12], landmarks[4])) {
+        //Play the sound
+        console.warn("Middle finger action");
+
+        startDrumHitRight = false;  
+
+        // Create an Audio object
+        const audio = new Audio('assets/bassdrum.mp3');
+
+        // Play the audio in the background
+        audio.play();
+
+      }
+      //Ring Finger action 
+      if(startDrumHitRight && handedness == "Left" && closedPoints(landmarks[16], landmarks[4])) {
+        //Play the sound
+        console.warn("Ring Finger action ");
+
+        startDrumHitRight = false;  
+
+        // Create an Audio object
+        const audio = new Audio('assets/electribe-hats.mp3');
+
+        // Play the audio in the background
+        audio.play();
+
+      }
+      //Pinky Finger action
+      if(startDrumHitRight && handedness == "Left" && closedPoints(landmarks[20], landmarks[4])) {
+        //Play the sound
+        console.warn("Pinky Finger action");
+
+        startDrumHitRight = false;  
+
+        // Create an Audio object
+        const audio = new Audio('assets/mega-clap.mp3');
+
+        // Play the audio in the background
+        audio.play();
+
+      }
+
+
+      //PLAY/STOP detect and managing
       if(!waitForOpenHand && categoryName == "Closed_Fist" && categoryScore > 60 && handedness == "Right") {
         if (waveformRef.current) {
           waveformRef.current.playPause();
@@ -177,6 +243,8 @@ function App() {
         waitForOpenHand = false;
       }
 
+
+      //CUT detect and managing
       if(startCuttingLeft && handedness == "Left" && closedPoints(landmarks[6], landmarks[10]) && closedPoints(landmarks[7], landmarks[11]) && closedPoints(landmarks[8], landmarks[12])) {
         closedCutLeft = true;
       }
