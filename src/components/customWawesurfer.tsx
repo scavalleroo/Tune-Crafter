@@ -27,12 +27,6 @@ const Waveform = React.forwardRef<WaveSurfer | null, WaveformProps>(
       };
     }, [audioUrl]);
 
-    const handlePlay = () => {
-      if (wavesurferRef.current) {
-        wavesurferRef.current.playPause();
-      }
-    };
-
     // Assign the handlePlay function to the ref
     useEffect(() => {
       if (ref) {
@@ -47,7 +41,6 @@ const Waveform = React.forwardRef<WaveSurfer | null, WaveformProps>(
     return (
       <div>
         <div id="waveform" style={{ height: '50px' }}></div>
-        <button onClick={handlePlay}>Play/Pause</button>
       </div>
     );
   }

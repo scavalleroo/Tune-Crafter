@@ -10,9 +10,17 @@ import {
 
 // import { Button } from 'react-bootstrap';
 import Waveform from './components/customWawesurfer';
+import RegionsPlugin from 'wavesurfer.js/src/plugin/regions';
+
 
 function App() {
   var waitForOpenHand: Boolean = true;
+  var startCuttingLeft: Boolean = false;
+  var closedCutLeft: Boolean = false;
+  // var cuttedLeft: Boolean = false;
+  // var startCuttingRight: Boolean = false;
+  // var closedCutRight: Boolean = false;
+  // var cuttedCompleted: Boolean = false;
 
   useEffect(() => {
     let gestureRecognizer: GestureRecognizer;
@@ -105,6 +113,7 @@ function App() {
       if (video.currentTime !== lastVideoTime) {
         lastVideoTime = video.currentTime;
         results = gestureRecognizer.recognizeForVideo(video, nowInMs);
+        console.log(results);
       }
 
       canvasCtx.save();
@@ -146,7 +155,7 @@ function App() {
         const handedness = results.handednesses[0][0].displayName;
         gestureOutput.innerText = `GestureRecognizer: ${categoryName}\n Confidence: ${categoryScore} %\n Handedness: ${handedness}\n`;
 
-        detectAction(categoryName, categoryScore, handedness);
+        detectAction(categoryName, categoryScore, handedness ,results.landmarks[0]);
       } else {
         gestureOutput.style.display = "none";
       }
@@ -156,7 +165,7 @@ function App() {
       }
     }
 
-    function detectAction(categoryName: string, categoryScore: any, handedness: string) {
+    function detectAction(categoryName: string, categoryScore: any, handedness: string, landmarks: any) {
       if(!waitForOpenHand && categoryName == "Closed_Fist" && categoryScore > 60 && handedness == "Right") {
         if (waveformRef.current) {
           waveformRef.current.playPause();
@@ -167,11 +176,49 @@ function App() {
       if(categoryName == "Open_Palm" && handedness == "Right" && categoryScore > 60) {
         waitForOpenHand = false;
       }
+
+      if(startCuttingLeft && handedness == "Left" && closedPoints(landmarks[6], landmarks[10]) && closedPoints(landmarks[7], landmarks[11]) && closedPoints(landmarks[8], landmarks[12])) {
+        closedCutLeft = true;
+      }
+
+      if(categoryName == "Victory" && handedness == "Left" && categoryScore > 60) {
+        if(!startCuttingLeft) {
+          startCuttingLeft = true;
+        }
+        if(closedCutLeft) {
+          startCuttingLeft = false;
+          closedCutLeft = false;
+          console.log("Cutted left");
+
+          if(wsRegions == null) {
+            wsRegions = waveformRef.current?.addPlugin(RegionsPlugin.create({}));
+          }
+
+          if (waveformRef.current) {
+            wsRegions?.addRegion({
+              start: waveformRef.current.getCurrentTime(),
+              color: "red",
+            });
+            console.log("Region added: " + waveformRef.current.getCurrentTime());
+          }
+        }
+      }
+    }
+
+    function closedPoints(point1:any , point2: any) {
+      var a = point1.x - point2.x;
+      var b = point1.y - point2.y;
+      var c = Math.sqrt(a * a + b * b);
+      if(c < 0.08) {
+        return true;
+      }
+      return false;
     }
   }, []);
 
   const audioUrl = 'assets/audio.mp3';
   const waveformRef = useRef<WaveSurfer | null>(null);
+  let wsRegions: any = null;
 
   return (
     <>
