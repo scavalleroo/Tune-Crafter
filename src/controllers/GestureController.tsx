@@ -55,7 +55,6 @@ export class GestureController extends React.Component {
     private audioSnare : HTMLAudioElement = new Audio('assets/dubstep-snare-drum.mp3');
     private audioElecribe : HTMLAudioElement = new Audio('assets/electribe-hats.mp3');    
     private audioClap : HTMLAudioElement = new Audio('assets/mega-clap.mp3');
-    
 
     constructor(props: any) {
         super(props);
@@ -200,26 +199,26 @@ export class GestureController extends React.Component {
                     //Index finger action
                     if(this.closedPoints(landmarks[8], landmarks[4])) {
 
-                    console.warn("Index finger action");
-                    this.currSDrum = DrumState.Completed;  
-                    // Play the audio in the background
-                    this.audioBassdrum.play();
+                        console.warn("Index finger action");
+                        this.currSDrum = DrumState.Completed;  
+                        // Play the audio in the background
+                        this.audioBassdrum.play();
                     }
 
                     //Middle finger action
                     if(this.closedPoints(landmarks[12], landmarks[4])) {
-                    console.warn("Middle finger action");
-        
-                    // Play the audio in the background
-                    this.audioSnare.play();
+                        console.warn("Middle finger action");
+            
+                        // Play the audio in the background
+                        this.audioSnare.play();
                     }
 
                     //Ring finger action
                     if(this.closedPoints(landmarks[16], landmarks[4])) {
-                    console.warn("Ring Finger action ");
-        
-                    // Play the audio in the background
-                    this.audioElecribe.play();
+                        console.warn("Ring Finger action ");
+            
+                        // Play the audio in the background
+                        this.audioElecribe.play();
                     }
 
                     //Pinky Finger action
@@ -228,8 +227,7 @@ export class GestureController extends React.Component {
 
                         // Play the audio in the background
                         this.audioClap.play();
-
-          }
+                    }
 
                 }
 
@@ -242,6 +240,7 @@ export class GestureController extends React.Component {
                 if (handedness == "Right") {
                     this.currSPlayPause = PlayPauseState.Started;
                 }
+                this.currSDrum = DrumState.StartDrumming;
                 this.currSCut = CutState.Empty;
                 break;
             case "Closed_Fist":
