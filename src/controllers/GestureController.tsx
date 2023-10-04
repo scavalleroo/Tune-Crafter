@@ -51,11 +51,11 @@ export class GestureController extends React.Component {
 
     private waveformRef: any = undefined;
 
-    private audioBassdrum : HTMLAudioElement = new Audio('assets/bassdrum.mp3');
-    private audioSnare : HTMLAudioElement = new Audio('assets/dubstep-snare-drum.mp3');
-    private audioElecribe : HTMLAudioElement = new Audio('assets/electribe-hats.mp3');    
-    private audioClap : HTMLAudioElement = new Audio('assets/mega-clap.mp3');
-    
+    private audioBassdrum: HTMLAudioElement = new Audio('assets/bassdrum.mp3');
+    private audioSnare: HTMLAudioElement = new Audio('assets/dubstep-snare-drum.mp3');
+    private audioElecribe: HTMLAudioElement = new Audio('assets/electribe-hats.mp3');
+    private audioClap: HTMLAudioElement = new Audio('assets/mega-clap.mp3');
+
 
     constructor(props: any) {
         super(props);
@@ -67,17 +67,6 @@ export class GestureController extends React.Component {
         this.audioElecribe.preload = 'auto';
         this.audioClap.preload = 'auto'
 
-        if (this.wsRegions == null) {
-            this.wsRegions = this.waveformRef.current?.addPlugin(RegionsPlugin.create({}));
-            this.wsRegions.on('region-created', (region: any) => {
-                region.playLoop();
-                console.log(region);
-                console.log("Play region");
-            });
-            this.wsRegions.on('region-out', (region: any) => {
-                region.play();
-            })
-        }
     }
 
     async createGestureRecognizer() {
@@ -92,13 +81,31 @@ export class GestureController extends React.Component {
             numHands: 2,
             runningMode: "VIDEO"
         });
+
+        if (this.wsRegions == null) {
+            this.wsRegions = this.waveformRef.current?.addPlugin(RegionsPlugin.create({}));
+            this.wsRegions.on('region-created', (region: any) => {
+                region.playLoop();
+                console.log(region);
+                console.log("Play region");
+            });
+            this.wsRegions.on('region-out', (region: any) => {
+                region.play();
+            })
+        }
     }
 
     predictWebcam() {
         // Now let's start detecting the stream.
         if (this.gestureRecognizer) {
             this.setupCanvas();
-            this.recogniseGesture();
+            //this.recogniseGesture();
+            let nowInMs = Date.now();
+            if (this.video.currentTime !== this.lastVideoTime) {
+                this.lastVideoTime = this.video.currentTime;
+                this.results = this.gestureRecognizer?.recognizeForVideo(this.video, nowInMs);
+                console.log(this.results);
+            }
             this.drawHands();
             this.performAction();
             window.requestAnimationFrame(this.predictWebcam.bind(this));
@@ -122,15 +129,6 @@ export class GestureController extends React.Component {
             this.handleRegions();
         } else {
             this.gestureOutput.style.display = "none";
-        }
-    }
-
-    private recogniseGesture() {
-        let nowInMs = Date.now();
-        if (this.video.currentTime !== this.lastVideoTime) {
-            this.lastVideoTime = this.video.currentTime;
-            this.results = this.gestureRecognizer?.recognizeForVideo(this.video, nowInMs);
-            console.log(this.results);
         }
     }
 
@@ -206,41 +204,41 @@ export class GestureController extends React.Component {
                 }
 
                 //DRUMS detect and managing
-                if(this.currSDrum == DrumState.StartDrumming) {
+                if (this.currSDrum == DrumState.StartDrumming) {
 
                     //Index finger action
-                    if(this.closedPoints(landmarks[8], landmarks[4])) {
+                    if (this.closedPoints(landmarks[8], landmarks[4])) {
 
-                    console.warn("Index finger action");
-                    this.currSDrum = DrumState.Completed;  
-                    // Play the audio in the background
-                    this.audioBassdrum.play();
+                        console.warn("Index finger action");
+                        this.currSDrum = DrumState.Completed;
+                        // Play the audio in the background
+                        this.audioBassdrum.play();
                     }
 
                     //Middle finger action
-                    if(this.closedPoints(landmarks[12], landmarks[4])) {
-                    console.warn("Middle finger action");
-        
-                    // Play the audio in the background
-                    this.audioSnare.play();
+                    if (this.closedPoints(landmarks[12], landmarks[4])) {
+                        console.warn("Middle finger action");
+
+                        // Play the audio in the background
+                        this.audioSnare.play();
                     }
 
                     //Ring finger action
-                    if(this.closedPoints(landmarks[16], landmarks[4])) {
-                    console.warn("Ring Finger action ");
-        
-                    // Play the audio in the background
-                    this.audioElecribe.play();
+                    if (this.closedPoints(landmarks[16], landmarks[4])) {
+                        console.warn("Ring Finger action ");
+
+                        // Play the audio in the background
+                        this.audioElecribe.play();
                     }
 
                     //Pinky Finger action
-                    if(this.closedPoints(landmarks[20], landmarks[4])) {
+                    if (this.closedPoints(landmarks[20], landmarks[4])) {
                         console.warn("Pincky Finger action ");
 
                         // Play the audio in the background
                         this.audioClap.play();
 
-          }
+                    }
 
                 }
 
