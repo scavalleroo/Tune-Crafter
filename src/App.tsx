@@ -40,7 +40,6 @@ function App() {
   var currSDrum: DrumState = DrumState.Empty;
   var currSCut: CutState = CutState.Empty;
   var loopRegion: any = null;
-  var startDrumHitLeft: Boolean = false;
   // var cuttedLeft: Boolean = false;
   // var startCuttingRight: Boolean = false;
   // var closedCutRight: Boolean = false;
@@ -261,8 +260,6 @@ function App() {
             //Middle finger action
             if(closedPoints(landmarks[12], landmarks[4])) {
               console.warn("Middle finger action");
-
-              startDrumHitLeft = false;  
   
               // Play the audio in the background
               audioSnare.play();
@@ -271,8 +268,6 @@ function App() {
             //Ring finger action
             if(closedPoints(landmarks[16], landmarks[4])) {
               console.warn("Ring Finger action ");
-
-              startDrumHitLeft = false;  
   
               // Play the audio in the background
               audioElecribe.play();
@@ -280,8 +275,6 @@ function App() {
 
             if(closedPoints(landmarks[20], landmarks[4])) {
               console.warn("Pinky Finger action");
-
-              startDrumHitLeft = false;  
               // Play the audio in the background
               audioClap.play();
             }
