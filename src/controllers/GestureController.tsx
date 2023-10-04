@@ -6,6 +6,7 @@ import {
     FilesetResolver,
     DrawingUtils
 } from '../../node_modules/@mediapipe/tasks-vision';
+import { SoundManager } from "../SoundsManager";
 
 enum CutState {
     Empty = "empty",
@@ -51,10 +52,7 @@ export class GestureController extends React.Component {
 
     private waveformRef: any = undefined;
 
-    private audioBassdrum : HTMLAudioElement = new Audio('assets/bassdrum.mp3');
-    private audioSnare : HTMLAudioElement = new Audio('assets/dubstep-snare-drum.mp3');
-    private audioElecribe : HTMLAudioElement = new Audio('assets/electribe-hats.mp3');    
-    private audioClap : HTMLAudioElement = new Audio('assets/mega-clap.mp3');
+    private soundManager = new SoundManager();
 
     constructor(props: any) {
         super(props);
@@ -193,23 +191,22 @@ export class GestureController extends React.Component {
                 //DRUMS detect and managing
                 if(this.currSDrum == DrumState.StartDrumming && handedness == "Left") {
 
-                    //Audio to put in async to play them without overriding everything
+                    //Audio to put in async to play them without overriding everything (?)
 
                     //Index finger action
                     if(this.closedPoints(landmarks[8], landmarks[4])) {
-
                         console.warn("Index finger action");
-                        this.currSDrum = DrumState.Completed;  
+
                         // Play the audio in the background
-                        this.audioBassdrum.play();
+                        this.soundManager.playSound('bassdrum');
                     }
 
                     //Middle finger action
                     if(this.closedPoints(landmarks[12], landmarks[4])) {
-                        console.warn("Middle finger action");
+                        console.warn("Middle finger action"); 
             
                         // Play the audio in the background
-                        this.audioSnare.play();
+                        this.soundManager.playSound('snare');
                     }
 
                     //Ring finger action
@@ -217,7 +214,7 @@ export class GestureController extends React.Component {
                         console.warn("Ring Finger action ");
             
                         // Play the audio in the background
-                        this.audioElecribe.play();
+                        this.soundManager.playSound('electribe');
                     }
 
                     //Pinky Finger action
@@ -225,7 +222,8 @@ export class GestureController extends React.Component {
                         console.warn("Pincky Finger action ");
 
                         // Play the audio in the background
-                        this.audioClap.play();
+                        // Play sounds
+                        this.soundManager.playSound('clap');
                     }
 
                 }
@@ -291,6 +289,7 @@ export class GestureController extends React.Component {
     }
 
     setAudioObjects() {
+        /*
         this.audioBassdrum.preload = 'auto';
         this.audioSnare.preload = 'auto';
         this.audioElecribe.preload = 'auto';
@@ -300,6 +299,13 @@ export class GestureController extends React.Component {
         this.audioSnare.volume = 1.0;
         this.audioElecribe.volume = 1.0;
         this.audioClap.volume = 1.0;
+        */
+
+        // Load audio files
+        this.soundManager.loadSound('bassdrum', 'assets/bassdrum.mp3');
+        this.soundManager.loadSound('snare', 'assets/dubstep-snare-drum.mp3');
+        this.soundManager.loadSound('electribe', 'assets/electribe-hats.mp3');
+        this.soundManager.loadSound('clap', 'assets/mega-clap.mp3');
     }
 
     closedPoints(point1: any, point2: any) {
