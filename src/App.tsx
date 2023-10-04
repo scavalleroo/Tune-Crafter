@@ -8,36 +8,6 @@ import Waveform from './components/customWawesurfer';
 
 
 function App() {
-  enum CutState {
-    Empty = "empty",
-    StartCuttingLeft = "startCuttingLeft",
-    ClosedCutLeft = "closedCutLeft",
-    CuttedLeft = "cuttedLeft",
-    StartCuttingRight = "startCuttingRight",
-    ClosedCutRight = "closedCutRight",
-    CuttedCompleted = "cuttedCompleted"
-  }
-
-  enum PlayPauseState {
-    Empty = "empty",
-    Started = "started",
-    Completed = "completed"
-  }
-
-  enum DrumState {
-    Empty = "empty",
-    StartDrumming = "startedLeft",
-    Completed = "completed"
-  }
-
-  var currSPlayPause: PlayPauseState = PlayPauseState.Empty;
-  var currSDrum: DrumState = DrumState.Empty;
-  var currSCut: CutState = CutState.Empty;
-  var loopRegion: any = null;
-  // var cuttedLeft: Boolean = false;
-  // var startCuttingRight: Boolean = false;
-  // var closedCutRight: Boolean = false;
-  // var cuttedCompleted: Boolean = false;
 
   const audioUrl = 'assets/audio.mp3';
   const waveformRef = useRef<WaveSurfer | null>(null);
