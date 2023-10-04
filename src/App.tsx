@@ -30,7 +30,14 @@ function App() {
     Completed = "completed"
   }
 
+  enum DrumState {
+    Empty = "empty",
+    StartDrumming = "startedLeft",
+    Completed = "completed"
+  }
+
   var currSPlayPause: PlayPauseState = PlayPauseState.Empty;
+  var currSDrum: DrumState = DrumState.Empty;
   var currSCut: CutState = CutState.Empty;
   var loopRegion: any = null;
   var startDrumHitLeft: Boolean = false;
@@ -238,6 +245,49 @@ function App() {
               currSCut = CutState.ClosedCutRight;
             }
           }
+
+          //DRUMS detect and managing
+          if(currSDrum == DrumState.StartDrumming) {
+
+            //Index finger action
+            if(closedPoints(landmarks[8], landmarks[4])) {
+
+              console.warn("Index finger action");
+              currSDrum = DrumState.Completed;  
+              // Play the audio in the background
+              audioBassdrum.play();
+            }
+
+            //Middle finger action
+            if(closedPoints(landmarks[12], landmarks[4])) {
+              console.warn("Middle finger action");
+
+              startDrumHitLeft = false;  
+  
+              // Play the audio in the background
+              audioSnare.play();
+            }
+
+            //Ring finger action
+            if(closedPoints(landmarks[16], landmarks[4])) {
+              console.warn("Ring Finger action ");
+
+              startDrumHitLeft = false;  
+  
+              // Play the audio in the background
+              audioElecribe.play();
+            }
+
+            if(closedPoints(landmarks[20], landmarks[4])) {
+              console.warn("Pinky Finger action");
+
+              startDrumHitLeft = false;  
+              // Play the audio in the background
+              audioClap.play();
+            }
+
+          }
+          
           break;
         case "Pointing_Up":
           currSPlayPause = PlayPauseState.Empty;
@@ -247,6 +297,7 @@ function App() {
           if (handedness == "Right") {
             currSPlayPause = PlayPauseState.Started;
           }
+          currSDrum = DrumState.StartDrumming;
           currSCut = CutState.Empty;
           break;
         case "Closed_Fist":
@@ -294,55 +345,6 @@ function App() {
           currSPlayPause = PlayPauseState.Empty;
           currSCut = CutState.Empty;
           break;
-      
-      //DRUMS detect and managing
-      if(!startDrumHitLeft && categoryName == "Open_Palm" && handedness == "Left" && categoryScore > 50) {
-        startDrumHitLeft = true;  
-        console.warn("startDrumHitLeft = true");
-      }
-      //Index finger action
-      if(startDrumHitLeft && handedness == "Left" && closedPoints(landmarks[8], landmarks[4])) {
-        //Play the sound
-        console.warn("Index finger action");
-
-        startDrumHitLeft = false;  
-
-        // Play the audio in the background
-        audioBassdrum.play();
-
-      }
-      //Middle finger action
-      if(startDrumHitLeft && handedness == "Left" && closedPoints(landmarks[12], landmarks[4])) {
-        //Play the sound
-        console.warn("Middle finger action");
-
-        startDrumHitLeft = false;  
-
-        // Play the audio in the background
-        audioSnare.play();
-
-      }
-      //Ring Finger action 
-      if(startDrumHitLeft && handedness == "Left" && closedPoints(landmarks[16], landmarks[4])) {
-        //Play the sound
-        console.warn("Ring Finger action ");
-
-        startDrumHitLeft = false;  
-
-        // Play the audio in the background
-        audioElecribe.play();
-
-      }
-      //Pinky Finger action
-      if(startDrumHitLeft && handedness == "Left" && closedPoints(landmarks[20], landmarks[4])) {
-        //Play the sound
-        console.warn("Pinky Finger action");
-
-        startDrumHitLeft = false;  
-        // Play the audio in the background
-        audioClap.play();
-
-      }
 
       }
     }
