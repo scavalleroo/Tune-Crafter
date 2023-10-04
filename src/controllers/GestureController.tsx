@@ -50,7 +50,6 @@ export class GestureController extends React.Component {
     private videoWidth: string = "auto";
 
     private waveformRef: any = undefined;
-    private ready: boolean = false;
 
     private audioBassdrum : HTMLAudioElement = new Audio('assets/bassdrum.mp3');
     private audioSnare : HTMLAudioElement = new Audio('assets/dubstep-snare-drum.mp3');
@@ -70,26 +69,23 @@ export class GestureController extends React.Component {
 
     }
 
-    createGestureRecognizer = async () => {
+    async createGestureRecognizer() {
         const vision = await FilesetResolver.forVisionTasks(
             "../../node_modules/@mediapipe/tasks-vision/wasm",
         );
-        GestureRecognizer.createFromOptions(vision, {
+        this.gestureRecognizer = await GestureRecognizer.createFromOptions(vision, {
             baseOptions: {
                 modelAssetPath:
                     "../../public/models/gesture_recognizer.task"
             },
             numHands: 2,
             runningMode: "VIDEO"
-        }).then((gestureRecognizer) => {
-            this.gestureRecognizer = gestureRecognizer;
-            this.ready = true;
         });
     }
 
     predictWebcam() {
         // Now let's start detecting the stream.
-        if (this.ready) {
+        if (this.gestureRecognizer) {
             this.gestureRecognizer?.setOptions({
                 runningMode: "VIDEO",
                 numHands: 2
@@ -104,6 +100,7 @@ export class GestureController extends React.Component {
 
             this.gestureOutput = document.getElementById("gesture_output") as HTMLOutputElement;
             this.canvasElement = document.getElementById("output_canvas") as HTMLCanvasElement;
+            this.canvasCtx = this.canvasElement.getContext("2d");
 
             if (this.canvasCtx && this.gestureOutput) {
                 this.canvasCtx.save();
