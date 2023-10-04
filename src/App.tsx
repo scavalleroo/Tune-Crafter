@@ -2,10 +2,7 @@ import './App.css';
 import React, { useRef, useEffect } from "react";
 import { hasGetUserMedia } from './utils/helpers';
 import { GestureController } from './controllers/GestureController';
-
-// import { Button } from 'react-bootstrap';
 import Waveform from './components/customWawesurfer';
-
 
 function App() {
 
@@ -17,35 +14,29 @@ function App() {
     // If webcam supported, add event listener to button for when user
     // wants to activate it.
     if (hasGetUserMedia()) {
+      console.log("Enebling webcam");
       enableCam();
+      console.log("Webcam enabled");
     } else {
       console.warn("getUserMedia() is not supported by your browser");
     }
-
-    // Enable the live webcam view and start detection.
-    async function enableCam() {
-      const video: HTMLVideoElement = document.getElementById("webcam") as HTMLVideoElement;
-
-      const constraints = {
-        video: true
-      };
-
-      // Activate the webcam stream.
-      navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
-        video.srcObject = stream;
-        controller = new GestureController({ video, waveformRef });
-        controller.createGestureRecognizer().then(() => {
-          console.log("Starting predictions");
-          video.addEventListener("loadeddata", controller.predictWebcam);
-        });
-      });
-
-      if (!controller?.isReady()) {
-        console.log("Controller not ready");
-        return;
-      }
-    }
   }, []);
+
+  function enableCam() {
+    const video: HTMLVideoElement = document.getElementById("webcam") as HTMLVideoElement;
+
+    const constraints = { video: true };
+
+    // Activate the webcam stream.
+    navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
+      video.srcObject = stream;
+      controller = new GestureController({ video, waveformRef });
+      controller.createGestureRecognizer().then(() => {
+        video.addEventListener("loadeddata", controller.predictWebcam);
+        window.requestAnimationFrame(controller.predictWebcam.bind(controller));
+      });
+    });
+  }
 
   return (
     <>
