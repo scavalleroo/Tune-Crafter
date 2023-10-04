@@ -23,6 +23,12 @@ enum PlayPauseState {
     Completed = "completed"
 }
 
+enum DrumState {
+    Empty = "empty",
+    StartDrumming = "startedLeft",
+    Completed = "completed"
+}
+
 export class GestureController extends React.Component {
     private video: HTMLVideoElement;
     private lastVideoTime: number = -1;
@@ -33,6 +39,7 @@ export class GestureController extends React.Component {
 
     private currSPlayPause: PlayPauseState = PlayPauseState.Empty;
     private currSCut: CutState = CutState.Empty;
+    private currSDrum: DrumState = DrumState.Empty;
 
     private results: any = undefined;
     private loopRegion: any = undefined;
@@ -44,10 +51,22 @@ export class GestureController extends React.Component {
 
     private waveformRef: any = undefined;
 
+    private audioBassdrum : HTMLAudioElement = new Audio('assets/bassdrum.mp3');
+    private audioSnare : HTMLAudioElement = new Audio('assets/dubstep-snare-drum.mp3');
+    private audioElecribe : HTMLAudioElement = new Audio('assets/electribe-hats.mp3');    
+    private audioClap : HTMLAudioElement = new Audio('assets/mega-clap.mp3');
+    
+
     constructor(props: any) {
         super(props);
         this.video = props.video;
         this.waveformRef = props.waveformRef;
+
+        this.audioBassdrum.preload = 'auto';
+        this.audioSnare.preload = 'auto';
+        this.audioElecribe.preload = 'auto';
+        this.audioClap.preload = 'auto'
+
         if (this.wsRegions == null) {
             this.wsRegions = this.waveformRef.current?.addPlugin(RegionsPlugin.create({}));
             this.wsRegions.on('region-created', (region: any) => {
@@ -185,6 +204,46 @@ export class GestureController extends React.Component {
                         this.currSCut = CutState.ClosedCutRight;
                     }
                 }
+
+                //DRUMS detect and managing
+                if(this.currSDrum == DrumState.StartDrumming) {
+
+                    //Index finger action
+                    if(this.closedPoints(landmarks[8], landmarks[4])) {
+
+                    console.warn("Index finger action");
+                    this.currSDrum = DrumState.Completed;  
+                    // Play the audio in the background
+                    this.audioBassdrum.play();
+                    }
+
+                    //Middle finger action
+                    if(this.closedPoints(landmarks[12], landmarks[4])) {
+                    console.warn("Middle finger action");
+        
+                    // Play the audio in the background
+                    this.audioSnare.play();
+                    }
+
+                    //Ring finger action
+                    if(this.closedPoints(landmarks[16], landmarks[4])) {
+                    console.warn("Ring Finger action ");
+        
+                    // Play the audio in the background
+                    this.audioElecribe.play();
+                    }
+
+                    //Pinky Finger action
+                    if(this.closedPoints(landmarks[20], landmarks[4])) {
+                        console.warn("Pincky Finger action ");
+
+                        // Play the audio in the background
+                        this.audioClap.play();
+
+          }
+
+                }
+
                 break;
             case "Pointing_Up":
                 this.currSPlayPause = PlayPauseState.Empty;
