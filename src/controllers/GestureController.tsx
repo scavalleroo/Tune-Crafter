@@ -61,10 +61,7 @@ export class GestureController extends React.Component {
         this.video = props.video;
         this.waveformRef = props.waveformRef;
 
-        this.audioBassdrum.preload = 'auto';
-        this.audioSnare.preload = 'auto';
-        this.audioElecribe.preload = 'auto';
-        this.audioClap.preload = 'auto'
+        this.setAudioObjects();
 
     }
 
@@ -194,7 +191,9 @@ export class GestureController extends React.Component {
                 }
 
                 //DRUMS detect and managing
-                if(this.currSDrum == DrumState.StartDrumming) {
+                if(this.currSDrum == DrumState.StartDrumming && handedness == "Left") {
+
+                    //Audio to put in async to play them without overriding everything
 
                     //Index finger action
                     if(this.closedPoints(landmarks[8], landmarks[4])) {
@@ -289,6 +288,18 @@ export class GestureController extends React.Component {
                 this.currSCut = CutState.Empty;
                 break;
         }
+    }
+
+    setAudioObjects() {
+        this.audioBassdrum.preload = 'auto';
+        this.audioSnare.preload = 'auto';
+        this.audioElecribe.preload = 'auto';
+        this.audioClap.preload = 'auto'
+
+        this.audioBassdrum.volume = 1.0;
+        this.audioSnare.volume = 1.0;
+        this.audioElecribe.volume = 1.0;
+        this.audioClap.volume = 1.0;
     }
 
     closedPoints(point1: any, point2: any) {
