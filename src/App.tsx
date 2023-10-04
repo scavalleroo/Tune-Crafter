@@ -14,9 +14,25 @@ import RegionsPlugin from 'wavesurfer.js/src/plugin/regions';
 
 
 function App() {
-  var waitForOpenHand: Boolean = true;
-  var startCuttingLeft: Boolean = false;
-  var closedCutLeft: Boolean = false;
+  enum CutState {
+    Empty = "empty",
+    StartCuttingLeft = "startCuttingLeft",
+    ClosedCutLeft = "closedCutLeft",
+    CuttedLeft = "cuttedLeft",
+    StartCuttingRight = "startCuttingRight",
+    ClosedCutRight = "closedCutRight",
+    CuttedCompleted = "cuttedCompleted"
+  }
+
+  enum PlayPauseState {
+    Empty = "empty",
+    Started = "started",
+    Completed = "completed"
+  }
+
+  var currSPlayPause: PlayPauseState = PlayPauseState.Empty;
+  var currSCut: CutState = CutState.Empty;
+  var loopRegion: any = null;
   // var cuttedLeft: Boolean = false;
   // var startCuttingRight: Boolean = false;
   // var closedCutRight: Boolean = false;
@@ -153,9 +169,41 @@ function App() {
         ).toFixed(2);
 
         const handedness = results.handednesses[0][0].displayName;
-        gestureOutput.innerText = `GestureRecognizer: ${categoryName}\n Confidence: ${categoryScore} %\n Handedness: ${handedness}\n`;
+        gestureOutput.innerText = "Cut State " + currSCut;
 
-        detectAction(categoryName, categoryScore, handedness ,results.landmarks[0]);
+        detectAction(categoryName, categoryScore, handedness, results.landmarks[0]);
+
+        if (wsRegions == null) {
+          wsRegions = waveformRef.current?.addPlugin(RegionsPlugin.create({}));
+          wsRegions.on('region-created', (region: any) => {
+            region.playLoop();
+            console.log(region);
+            console.log("Play region");
+          });
+          wsRegions.on('region-out', (region: any) => {
+            region.play();
+          })
+        }
+
+        if (currSPlayPause == PlayPauseState.Completed && waveformRef.current) {
+          waveformRef.current.playPause();
+        }
+
+        if (currSCut == CutState.CuttedLeft && waveformRef.current) {
+          loopRegion = {
+            start: waveformRef.current.getCurrentTime(),
+            color: "red",
+            resize: false,
+            drag: false,
+            loop: true,
+          };
+        }
+
+        if (currSCut == CutState.CuttedCompleted && waveformRef.current) {
+          loopRegion.end = waveformRef.current.getCurrentTime();
+          wsRegions.addRegion(loopRegion);
+          currSCut = CutState.Empty;
+        }
       } else {
         gestureOutput.style.display = "none";
       }
@@ -166,50 +214,80 @@ function App() {
     }
 
     function detectAction(categoryName: string, categoryScore: any, handedness: string, landmarks: any) {
-      if(!waitForOpenHand && categoryName == "Closed_Fist" && categoryScore > 60 && handedness == "Right") {
-        if (waveformRef.current) {
-          waveformRef.current.playPause();
-          waitForOpenHand = true;
-        }
-      }
-
-      if(categoryName == "Open_Palm" && handedness == "Right" && categoryScore > 60) {
-        waitForOpenHand = false;
-      }
-
-      if(startCuttingLeft && handedness == "Left" && closedPoints(landmarks[6], landmarks[10]) && closedPoints(landmarks[7], landmarks[11]) && closedPoints(landmarks[8], landmarks[12])) {
-        closedCutLeft = true;
-      }
-
-      if(categoryName == "Victory" && handedness == "Left" && categoryScore > 60) {
-        if(!startCuttingLeft) {
-          startCuttingLeft = true;
-        }
-        if(closedCutLeft) {
-          startCuttingLeft = false;
-          closedCutLeft = false;
-          console.log("Cutted left");
-
-          if(wsRegions == null) {
-            wsRegions = waveformRef.current?.addPlugin(RegionsPlugin.create({}));
+      console.log(categoryScore);
+      switch (categoryName) {
+        case "None":
+          if (currSCut == CutState.StartCuttingLeft && handedness == "Left" && closedPoints(landmarks[6], landmarks[10]) && closedPoints(landmarks[7], landmarks[11]) && closedPoints(landmarks[8], landmarks[12])) {
+            currSCut = CutState.ClosedCutLeft;
+          } else {
+            if (currSCut == CutState.StartCuttingRight && handedness == "Right" && closedPoints(landmarks[6], landmarks[10]) && closedPoints(landmarks[7], landmarks[11]) && closedPoints(landmarks[8], landmarks[12])) {
+              currSCut = CutState.ClosedCutRight;
+            }
           }
-
-          if (waveformRef.current) {
-            wsRegions?.addRegion({
-              start: waveformRef.current.getCurrentTime(),
-              color: "red",
-            });
-            console.log("Region added: " + waveformRef.current.getCurrentTime());
+          break;
+        case "Pointing_Up":
+          currSPlayPause = PlayPauseState.Empty;
+          currSCut = CutState.Empty;
+          break;
+        case "Open_Palm":
+          if (handedness == "Right") {
+            currSPlayPause = PlayPauseState.Started;
           }
-        }
+          currSCut = CutState.Empty;
+          break;
+        case "Closed_Fist":
+          if (handedness == "Right" && currSPlayPause == PlayPauseState.Started) {
+            currSPlayPause = PlayPauseState.Completed;
+          } else {
+            currSPlayPause = PlayPauseState.Empty;
+          }
+          currSCut = CutState.Empty;
+          break;
+        case "Victory":
+          currSPlayPause = PlayPauseState.Empty;
+          switch (currSCut) {
+            case CutState.Empty:
+              if (handedness == "Left") {
+                currSCut = CutState.StartCuttingLeft;
+              }
+              break;
+            case CutState.ClosedCutLeft:
+              if (handedness == "Left") {
+                currSCut = CutState.CuttedLeft;
+              }
+              break;
+            case CutState.CuttedLeft:
+              if (handedness == "Right") {
+                currSCut = CutState.StartCuttingRight;
+              }
+              break;
+            case CutState.ClosedCutRight:
+              if (handedness == "Right") {
+                currSCut = CutState.CuttedCompleted;
+              }
+              break;
+          }
+          break;
+        case "Thumbs_Up":
+          currSPlayPause = PlayPauseState.Empty;
+          currSCut = CutState.Empty;
+          break;
+        case "Thumbs_Down":
+          currSPlayPause = PlayPauseState.Empty;
+          currSCut = CutState.Empty;
+          break;
+        case "ILoveYou":
+          currSPlayPause = PlayPauseState.Empty;
+          currSCut = CutState.Empty;
+          break;
       }
     }
 
-    function closedPoints(point1:any , point2: any) {
+    function closedPoints(point1: any, point2: any) {
       var a = point1.x - point2.x;
       var b = point1.y - point2.y;
       var c = Math.sqrt(a * a + b * b);
-      if(c < 0.08) {
+      if (c < 0.1) {
         return true;
       }
       return false;
