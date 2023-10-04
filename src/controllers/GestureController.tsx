@@ -48,6 +48,17 @@ export class GestureController extends React.Component {
         super(props);
         this.video = props.video;
         this.waveformRef = props.waveformRef;
+        if (this.wsRegions == null) {
+            this.wsRegions = this.waveformRef.current?.addPlugin(RegionsPlugin.create({}));
+            this.wsRegions.on('region-created', (region: any) => {
+                region.playLoop();
+                console.log(region);
+                console.log("Play region");
+            });
+            this.wsRegions.on('region-out', (region: any) => {
+                region.play();
+            })
+        }
     }
 
     async createGestureRecognizer() {
@@ -67,100 +78,100 @@ export class GestureController extends React.Component {
     predictWebcam() {
         // Now let's start detecting the stream.
         if (this.gestureRecognizer) {
-            this.gestureRecognizer?.setOptions({
-                runningMode: "VIDEO",
-                numHands: 2
-            });
+            this.setupCanvas();
+            this.recogniseGesture();
+            this.drawHands();
+            this.performAction();
+            window.requestAnimationFrame(this.predictWebcam.bind(this));
+        }
+    }
 
-            let nowInMs = Date.now();
-            if (this.video.currentTime !== this.lastVideoTime) {
-                this.lastVideoTime = this.video.currentTime;
-                this.results = this.gestureRecognizer?.recognizeForVideo(this.video, nowInMs);
-                console.log(this.results);
-            }
+    private performAction() {
+        if (this.results.gestures.length > 0) {
+            this.gestureOutput.style.display = "block";
 
+            const categoryName = this.results.gestures[0][0].categoryName;
+            const categoryScore = parseFloat(
+                (this.results.gestures[0][0].score * 100).toString()
+            ).toFixed(2);
+            const handedness = this.results.handednesses[0][0].displayName;
+
+            this.gestureOutput.innerText = "Cut State " + this.currSCut;
+
+            this.detectAction(categoryName, categoryScore, handedness, this.results.landmarks[0]);
+            this.handlePlayPause();
+            this.handleRegions();
+        } else {
+            this.gestureOutput.style.display = "none";
+        }
+    }
+
+    private recogniseGesture() {
+        let nowInMs = Date.now();
+        if (this.video.currentTime !== this.lastVideoTime) {
+            this.lastVideoTime = this.video.currentTime;
+            this.results = this.gestureRecognizer?.recognizeForVideo(this.video, nowInMs);
+            console.log(this.results);
+        }
+    }
+
+    private handlePlayPause() {
+        if (this.currSPlayPause == PlayPauseState.Completed && this.waveformRef.current) {
+            this.waveformRef.current.playPause();
+        }
+    }
+
+    private handleRegions() {
+        if (this.currSCut == CutState.CuttedLeft && this.waveformRef.current) {
+            this.loopRegion = {
+                start: this.waveformRef.current.getCurrentTime(),
+                color: "red",
+                resize: false,
+                drag: false,
+                loop: true,
+            };
+        }
+
+        if (this.currSCut == CutState.CuttedCompleted && this.waveformRef.current) {
+            this.loopRegion.end = this.waveformRef.current.getCurrentTime();
+            this.wsRegions.addRegion(this.loopRegion);
+            this.currSCut = CutState.Empty;
+        }
+    }
+
+    private setupCanvas() {
+        if (this.gestureOutput == undefined || this.canvasElement == undefined || this.canvasCtx == undefined) {
             this.gestureOutput = document.getElementById("gesture_output") as HTMLOutputElement;
             this.canvasElement = document.getElementById("output_canvas") as HTMLCanvasElement;
             this.canvasCtx = this.canvasElement.getContext("2d");
-
-            if (this.canvasCtx && this.gestureOutput) {
-                this.canvasCtx.save();
-                this.canvasCtx.clearRect(0, 0, this.canvasElement.width, this.canvasElement.height);
-                const drawingUtils = new DrawingUtils(this.canvasCtx);
-
-                this.canvasElement.style.height = this.videoHeight;
-                this.canvasElement.style.width = this.videoWidth;
-
-                //Skeleton of hands detection
-                if (this.results.landmarks) {
-                    for (const landmarks of this.results.landmarks) {
-                        drawingUtils.drawConnectors(
-                            landmarks,
-                            GestureRecognizer.HAND_CONNECTIONS,
-                            {
-                                color: "#00FF00",
-                                lineWidth: 5
-                            }
-                        );
-                        drawingUtils.drawLandmarks(landmarks, {
-                            color: "#FF0000",
-                            lineWidth: 2
-                        });
-                    }
-                }
-                this.canvasCtx.restore();
-                if (this.results.gestures.length > 0) {
-                    this.gestureOutput.style.display = "block";
-                    this.gestureOutput.style.width = this.videoWidth;
-
-                    const categoryName = this.results.gestures[0][0].categoryName;
-                    const categoryScore = parseFloat(
-                        (this.results.gestures[0][0].score * 100).toString()
-                    ).toFixed(2);
-
-                    const handedness = this.results.handednesses[0][0].displayName;
-                    this.gestureOutput.innerText = "Cut State " + this.currSCut;
-
-                    this.detectAction(categoryName, categoryScore, handedness, this.results.landmarks[0]);
-
-                    if (this.wsRegions == null) {
-                        this.wsRegions = this.waveformRef.current?.addPlugin(RegionsPlugin.create({}));
-                        this.wsRegions.on('region-created', (region: any) => {
-                            region.playLoop();
-                            console.log(region);
-                            console.log("Play region");
-                        });
-                        this.wsRegions.on('region-out', (region: any) => {
-                            region.play();
-                        })
-                    }
-
-                    if (this.currSPlayPause == PlayPauseState.Completed && this.waveformRef.current) {
-                        this.waveformRef.current.playPause();
-                    }
-
-                    if (this.currSCut == CutState.CuttedLeft && this.waveformRef.current) {
-                        this.loopRegion = {
-                            start: this.waveformRef.current.getCurrentTime(),
-                            color: "red",
-                            resize: false,
-                            drag: false,
-                            loop: true,
-                        };
-                    }
-
-                    if (this.currSCut == CutState.CuttedCompleted && this.waveformRef.current) {
-                        this.loopRegion.end = this.waveformRef.current.getCurrentTime();
-                        this.wsRegions.addRegion(this.loopRegion);
-                        this.currSCut = CutState.Empty;
-                    }
-
-                } else {
-                    this.gestureOutput.style.display = "none";
-                }
-            }
-            window.requestAnimationFrame(this.predictWebcam.bind(this));
+            this.canvasElement.style.height = this.videoHeight;
+            this.canvasElement.style.width = this.videoWidth;
+            this.gestureOutput.style.width = this.videoWidth;
         }
+
+        this.canvasCtx.save();
+        this.canvasCtx.clearRect(0, 0, this.canvasElement.width, this.canvasElement.height);
+    }
+
+    private drawHands() {
+        const drawingUtils = new DrawingUtils(this.canvasCtx);
+        if (this.results.landmarks) {
+            for (const landmarks of this.results.landmarks) {
+                drawingUtils.drawConnectors(
+                    landmarks,
+                    GestureRecognizer.HAND_CONNECTIONS,
+                    {
+                        color: "#00FF00",
+                        lineWidth: 5
+                    }
+                );
+                drawingUtils.drawLandmarks(landmarks, {
+                    color: "#FF0000",
+                    lineWidth: 2
+                });
+            }
+        }
+        this.canvasCtx.restore();
     }
 
     detectAction(categoryName: string, categoryScore: any, handedness: string, landmarks: any) {
