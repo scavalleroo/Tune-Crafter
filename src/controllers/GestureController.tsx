@@ -6,7 +6,7 @@ import {
     FilesetResolver,
     DrawingUtils
 } from '../../node_modules/@mediapipe/tasks-vision';
-import { SoundManager } from "../SoundsManager";
+import { AudioManager } from "../AudioManager";
 
 enum CutState {
     Empty = "empty",
@@ -52,7 +52,7 @@ export class GestureController extends React.Component {
 
     private waveformRef: any = undefined;
 
-    private soundManager = new SoundManager();
+    private audioManager = new AudioManager();
 
     constructor(props: any) {
         super(props);
@@ -89,7 +89,7 @@ export class GestureController extends React.Component {
             if (this.video.currentTime !== this.lastVideoTime) {
                 this.lastVideoTime = this.video.currentTime;
                 this.results = this.gestureRecognizer?.recognizeForVideo(this.video, nowInMs);
-                console.log(this.results);
+                //console.log(this.results);
             }
 
             this.gestureOutput = document.getElementById("gesture_output") as HTMLOutputElement;
@@ -136,6 +136,7 @@ export class GestureController extends React.Component {
 
                     this.detectAction(categoryName, categoryScore, handedness, this.results.landmarks[0]);
 
+                    /*
                     if (this.wsRegions == null) {
                         this.wsRegions = this.waveformRef.current?.addPlugin(RegionsPlugin.create({}));
                         this.wsRegions.on('region-created', (region: any) => {
@@ -147,11 +148,14 @@ export class GestureController extends React.Component {
                             region.play();
                         })
                     }
+                    */
 
                     if (this.currSPlayPause == PlayPauseState.Completed && this.waveformRef.current) {
-                        this.waveformRef.current.playPause();
+                        //this.waveformRef.current.playPause();
+                        this.audioManager.playPauseMainMusic();
                     }
 
+                    /*
                     if (this.currSCut == CutState.CuttedLeft && this.waveformRef.current) {
                         this.loopRegion = {
                             start: this.waveformRef.current.getCurrentTime(),
@@ -167,6 +171,7 @@ export class GestureController extends React.Component {
                         this.wsRegions.addRegion(this.loopRegion);
                         this.currSCut = CutState.Empty;
                     }
+                    */
 
                 } else {
                     this.gestureOutput.style.display = "none";
@@ -198,7 +203,9 @@ export class GestureController extends React.Component {
                         console.warn("Index finger action");
 
                         // Play the audio in the background
-                        this.soundManager.playSound('bassdrum');
+                        this.audioManager.playSound('bassdrum');
+
+                        this.currSDrum = DrumState.Completed;
                     }
 
                     //Middle finger action
@@ -206,7 +213,11 @@ export class GestureController extends React.Component {
                         console.warn("Middle finger action"); 
             
                         // Play the audio in the background
-                        this.soundManager.playSound('snare');
+                        this.audioManager.playSound('snare');
+
+                        //Start a Thread that loops over this until the two landmarks got detached
+
+                        this.currSDrum = DrumState.Completed;
                     }
 
                     //Ring finger action
@@ -214,7 +225,11 @@ export class GestureController extends React.Component {
                         console.warn("Ring Finger action ");
             
                         // Play the audio in the background
-                        this.soundManager.playSound('electribe');
+                        this.audioManager.playSound('electribe');
+
+                        //Start a Thread that loops over this until the two landmarks got detached
+
+                        this.currSDrum = DrumState.Completed;
                     }
 
                     //Pinky Finger action
@@ -223,7 +238,11 @@ export class GestureController extends React.Component {
 
                         // Play the audio in the background
                         // Play sounds
-                        this.soundManager.playSound('clap');
+                        this.audioManager.playSound('clap');
+
+                        //Start a Thread that loops over this until the two landmarks got detached
+
+                        this.currSDrum = DrumState.Completed;
                     }
 
                 }
@@ -302,10 +321,12 @@ export class GestureController extends React.Component {
         */
 
         // Load audio files
-        this.soundManager.loadSound('bassdrum', 'assets/bassdrum.mp3');
-        this.soundManager.loadSound('snare', 'assets/dubstep-snare-drum.mp3');
-        this.soundManager.loadSound('electribe', 'assets/electribe-hats.mp3');
-        this.soundManager.loadSound('clap', 'assets/mega-clap.mp3');
+        this.audioManager.loadSound('mainMusic', 'assets/audio.mp3')
+        this.audioManager.loadSound('bassdrum', 'assets/bassdrum.mp3');
+        this.audioManager.loadSound('snare', 'assets/dubstep-snare-drum.mp3');
+        this.audioManager.loadSound('electribe', 'assets/electribe-hats.mp3');
+        this.audioManager.loadSound('clap', 'assets/mega-clap.mp3');
+        
     }
 
     closedPoints(point1: any, point2: any) {

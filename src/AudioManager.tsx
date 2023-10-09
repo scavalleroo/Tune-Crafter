@@ -1,14 +1,19 @@
-export class SoundManager {
+import AudioScheduler from "./AudioScheduler";
 
+//Make it a function calss?
+export class AudioManager {
 
     //GESTIRE I SUONI IN MANIERA SINCRONIZZATA. TUTTI DEVONO DURARE LO STESSO. FAR PARTIRE DIVERSI THREAD (?)
 
-    private audioContext: AudioContext | null;
-    private audioBufferMap: Map<string, AudioBuffer>;
+    private audioContext: AudioContext | null; 
+    private audioBufferMap: Map<string, AudioBuffer>;  //With each sound
+    private audioScheduler : AudioScheduler;
+    private isPlaying : boolean = false;
     
     constructor() {
       this.audioContext = null;
       this.audioBufferMap = new Map();
+      this.audioScheduler = new AudioScheduler(this);
     }
   
     // Initialize the AudioContext
@@ -47,6 +52,31 @@ export class SoundManager {
         source.connect(this.audioContext.destination);
         source.start();
       }
+    }
+
+    playPauseMainMusic() : void {
+
+      console.warn("Entratooosfodof");
+      
+      if(this.isPlaying) {
+        this.stopAllSounds();
+        this.isPlaying = false;
+      }
+      else {
+        this.playSound("mainMusic");
+        this.isPlaying = true;
+      }
+
+    }
+
+    startSoundsLoop() : void {
+
+      //Start looping over a sound with a specific bpm
+
+      console.log("Nel loop");
+
+      this.audioScheduler.startLoop(this.audioContext, this.audioBufferMap)
+
     }
   
     // Stop all currently playing sounds
