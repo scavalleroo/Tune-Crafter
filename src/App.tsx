@@ -38,13 +38,11 @@ currentTime property and scheduling audio events with precise timing.
 */
 
 
-
-
-
 function App() {
 
   const waveformRef = useRef<WaveSurfer | null>(null);
   let controller: any;
+  let audioUrl = 'assets/audio.mp3';
 
   useEffect(() => {
     // If webcam supported, add event listener to button for when user
@@ -79,6 +77,7 @@ function App() {
     <>
       <section className="container text-center">
         <div style={{ height: "100vh", width: "auto" }}>
+          <Waveform ref={waveformRef} audioUrl={audioUrl} />
           <video id="webcam" autoPlay playsInline style={{ display: "none", height:"100%" }}></video>
           <GestureController ref={controller} />
         </div>
@@ -88,5 +87,3 @@ function App() {
 }
 
 export default App
-
-//<Waveform ref={waveformRef} audioUrl={audioUrl} />

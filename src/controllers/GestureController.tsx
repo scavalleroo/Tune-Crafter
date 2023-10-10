@@ -7,6 +7,14 @@ import {
     DrawingUtils
 } from '../../node_modules/@mediapipe/tasks-vision';
 import { AudioManager } from "../AudioManager";
+import IconsUI from "../IconsUI";
+
+//Icons coordinates
+interface Coordinates {
+    x : number; // X-coordinate in pixels
+    y : number; // Y-coordinate in pixels
+}
+export default Coordinates; 
 
 enum CutState {
     Empty = "empty",
@@ -54,6 +62,27 @@ export class GestureController extends React.Component {
 
     private audioManager = new AudioManager();
 
+    private thumbCoordinates : Coordinates = {
+        x: 100,
+        y: 100
+    }
+    private indexCoordinates : Coordinates = {
+        x: 200,
+        y: 200
+    }
+    private middleCoordinates : Coordinates = {
+        x: 300,
+        y: 300
+    }
+    private ringCoordinates : Coordinates = {
+        x: 400,
+        y: 400
+    }
+    private pinkyCoordinates : Coordinates = {
+        x: 500,
+        y: 500
+    }
+
     constructor(props: any) {
         super(props);
         this.video = props.video;
@@ -89,7 +118,7 @@ export class GestureController extends React.Component {
             if (this.video.currentTime !== this.lastVideoTime) {
                 this.lastVideoTime = this.video.currentTime;
                 this.results = this.gestureRecognizer?.recognizeForVideo(this.video, nowInMs);
-                //console.log(this.results);
+                console.log(this.results);
             }
 
             this.gestureOutput = document.getElementById("gesture_output") as HTMLOutputElement;
@@ -107,6 +136,10 @@ export class GestureController extends React.Component {
                 //Skeleton of hands detection
                 if (this.results.landmarks) {
                     for (const landmarks of this.results.landmarks) {
+
+                        //Render icons for the UI
+                        this.renderLandmarkIcons(this.results);
+
                         drawingUtils.drawConnectors(
                             landmarks,
                             GestureRecognizer.HAND_CONNECTIONS,
@@ -136,26 +169,22 @@ export class GestureController extends React.Component {
 
                     this.detectAction(categoryName, categoryScore, handedness, this.results.landmarks[0]);
 
-                    /*
                     if (this.wsRegions == null) {
                         this.wsRegions = this.waveformRef.current?.addPlugin(RegionsPlugin.create({}));
                         this.wsRegions.on('region-created', (region: any) => {
                             region.playLoop();
-                            console.log(region);
-                            console.log("Play region");
+                            //console.log(region);
+                            //console.log("Play region");
                         });
                         this.wsRegions.on('region-out', (region: any) => {
                             region.play();
                         })
                     }
-                    */
 
                     if (this.currSPlayPause == PlayPauseState.Completed && this.waveformRef.current) {
-                        //this.waveformRef.current.playPause();
-                        this.audioManager.playPauseMainMusic();
+                        this.waveformRef.current.playPause();
                     }
 
-                    /*
                     if (this.currSCut == CutState.CuttedLeft && this.waveformRef.current) {
                         this.loopRegion = {
                             start: this.waveformRef.current.getCurrentTime(),
@@ -171,7 +200,6 @@ export class GestureController extends React.Component {
                         this.wsRegions.addRegion(this.loopRegion);
                         this.currSCut = CutState.Empty;
                     }
-                    */
 
                 } else {
                     this.gestureOutput.style.display = "none";
@@ -182,7 +210,7 @@ export class GestureController extends React.Component {
     }
 
     detectAction(categoryName: string, categoryScore: any, handedness: string, landmarks: any) {
-        console.log(categoryScore);
+        //console.log(categoryScore);
         switch (categoryName) {
             case "None":
                 if (this.currSCut == CutState.StartCuttingLeft && handedness == "Left" && this.closedPoints(landmarks[6], landmarks[10]) && this.closedPoints(landmarks[7], landmarks[11]) && this.closedPoints(landmarks[8], landmarks[12])) {
@@ -261,6 +289,9 @@ export class GestureController extends React.Component {
                 break;
             case "Closed_Fist":
                 if (handedness == "Right" && this.currSPlayPause == PlayPauseState.Started) {
+
+                    console.warn("Pugno chiuso");
+                    
                     this.currSPlayPause = PlayPauseState.Completed;
                 } else {
                     this.currSPlayPause = PlayPauseState.Empty;
@@ -321,12 +352,20 @@ export class GestureController extends React.Component {
         */
 
         // Load audio files
-        this.audioManager.loadSound('mainMusic', 'assets/audio.mp3')
+        //this.audioManager.loadSound('mainMusic', 'assets/audio.mp3')
         this.audioManager.loadSound('bassdrum', 'assets/bassdrum.mp3');
         this.audioManager.loadSound('snare', 'assets/dubstep-snare-drum.mp3');
         this.audioManager.loadSound('electribe', 'assets/electribe-hats.mp3');
         this.audioManager.loadSound('clap', 'assets/mega-clap.mp3');
         
+    }
+
+    renderLandmarkIcons(results : any) {
+
+        console.warn(results);
+
+        //this.thumbCoordinates.x += landmarks[]
+
     }
 
     closedPoints(point1: any, point2: any) {
@@ -347,7 +386,13 @@ export class GestureController extends React.Component {
         return (
             <div>
                 <p id='gesture_output'></p>
-                <canvas className="output_canvas" id="output_canvas" width="1280" height="720" style={{ margin: "0 auto", border: "1px solid #000000", width: "auto", height: "100%" }}></canvas>
+                <IconsUI x={this.thumbCoordinates.x} y={this.thumbCoordinates.y}></IconsUI>
+                <IconsUI x={this.indexCoordinates.x} y={this.indexCoordinates.y}></IconsUI>
+                <IconsUI x={this.middleCoordinates.x} y={this.middleCoordinates.y}></IconsUI>
+                <IconsUI x={this.ringCoordinates.x} y={this.ringCoordinates.y}></IconsUI>
+                <IconsUI x={this.pinkyCoordinates.x} y={this.pinkyCoordinates.y}></IconsUI>
+                <canvas className="output_canvas" id="output_canvas" width="1280" height="720" style={{ margin: "0 auto", border: "1px solid #000000", width: "auto", height: "100%" }}>  
+                </canvas>
             </div>
         );
     }
