@@ -158,6 +158,9 @@ export class GestureController extends React.Component {
     }
 
     private performAction() {
+
+        //In modalità doppia mano non ferma la musica
+
         for (let i = 0; i < this.results.gestures.length; i++) {
             const categoryName = this.results.gestures[i][0].categoryName;
             const categoryScore = parseFloat(
@@ -170,7 +173,17 @@ export class GestureController extends React.Component {
             this.detectAction(categoryName, categoryScore, handedness, this.results.landmarks[i]);
             this.handlePlayPause();
             this.handleRegions();
+            this.handleVolume();
         }
+    }
+
+    private handleVolume() {
+
+        if(this.currSVolume == VolumeState.Started) {
+            console.warn("EEEEEEEEEEEEE SONO PARTITO");
+            
+        }
+
     }
 
     private handlePlayPause() {
@@ -240,7 +253,7 @@ export class GestureController extends React.Component {
     }
 
     detectAction(categoryName: string, categoryScore: any, handedness: string, landmarks: any) {
-        //console.log(categoryScore);
+        console.log(categoryScore);
         switch (categoryName) {
             case "None":
                 if (this.currSCut == CutState.StartCuttingLeft && handedness == "Left" && this.closedPoints(landmarks[6], landmarks[10]) && this.closedPoints(landmarks[7], landmarks[11]) && this.closedPoints(landmarks[8], landmarks[12])) {
