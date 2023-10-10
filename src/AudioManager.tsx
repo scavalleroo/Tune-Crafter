@@ -9,9 +9,9 @@ export class AudioManager {
     private audioBufferMap: Map<string, AudioBuffer>;  //With each sound
     private audioScheduler : AudioScheduler;
     private isPlaying : boolean = false;
-    
-    constructor() {
-      this.audioContext = null;
+
+    constructor(audioContext: AudioContext | null = null) {
+      this.audioContext = audioContext;
       this.audioBufferMap = new Map();
       this.audioScheduler = new AudioScheduler(this);
     }

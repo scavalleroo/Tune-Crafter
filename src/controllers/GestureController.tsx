@@ -38,6 +38,13 @@ enum DrumState {
     Completed = "completed"
 }
 
+enum VolumeState {
+    Empty = "empty",
+    Started = "startedManagingVolume",
+    Increasing = "increasing",
+    Decreasing = "decreasing"
+}
+
 export class GestureController extends React.Component {
     private video: HTMLVideoElement;
     private lastVideoTime: number = -1;
@@ -49,6 +56,7 @@ export class GestureController extends React.Component {
     private currSPlayPause: PlayPauseState = PlayPauseState.Empty;
     private currSCut: CutState = CutState.Empty;
     private currSDrum: DrumState = DrumState.Empty;
+    private currSVolume: VolumeState = VolumeState.Empty;
 
     private results: any = undefined;
     private loopRegion: any = undefined;
@@ -251,8 +259,6 @@ export class GestureController extends React.Component {
                         // Play the audio in the background
                         this.audioManager.playSound('snare');
 
-                        //Start a Thread that loops over this until the two landmarks got detached
-
                         this.currSDrum = DrumState.Completed;
                     }
 
@@ -262,8 +268,6 @@ export class GestureController extends React.Component {
             
                         // Play the audio in the background
                         this.audioManager.playSound('electribe');
-
-                        //Start a Thread that loops over this until the two landmarks got detached
 
                         this.currSDrum = DrumState.Completed;
                     }
@@ -276,8 +280,6 @@ export class GestureController extends React.Component {
                         // Play sounds
                         this.audioManager.playSound('clap');
 
-                        //Start a Thread that loops over this until the two landmarks got detached
-
                         this.currSDrum = DrumState.Completed;
                     }
 
@@ -287,13 +289,19 @@ export class GestureController extends React.Component {
             case "Pointing_Up":
                 this.currSPlayPause = PlayPauseState.Empty;
                 this.currSCut = CutState.Empty;
+                if(handedness == "Right") {
+                    this.currSVolume = VolumeState.Started;
+                }
                 break;
             case "Open_Palm":
                 if (handedness == "Right") {
                     this.currSPlayPause = PlayPauseState.Started;
                 }
-                this.currSDrum = DrumState.StartDrumming;
+                else if(handedness == "Left") {
+                    this.currSDrum = DrumState.StartDrumming;
+                }
                 this.currSCut = CutState.Empty;
+                this.currSVolume = VolumeState.Empty;
                 break;
             case "Closed_Fist":
                 if (handedness == "Right" && this.currSPlayPause == PlayPauseState.Started) {
@@ -305,9 +313,13 @@ export class GestureController extends React.Component {
                     this.currSPlayPause = PlayPauseState.Empty;
                 }
                 this.currSCut = CutState.Empty;
+                this.currSDrum = DrumState.Empty;
+                this.currSVolume = VolumeState.Empty;
                 break;
             case "Victory":
                 this.currSPlayPause = PlayPauseState.Empty;
+                this.currSDrum = DrumState.Empty;
+                this.currSVolume = VolumeState.Empty;
                 switch (this.currSCut) {
                     case CutState.Empty:
                         if (handedness == "Left") {
@@ -334,14 +346,20 @@ export class GestureController extends React.Component {
             case "Thumbs_Up":
                 this.currSPlayPause = PlayPauseState.Empty;
                 this.currSCut = CutState.Empty;
+                this.currSDrum = DrumState.Empty;
+                this.currSVolume = VolumeState.Empty;
                 break;
             case "Thumbs_Down":
                 this.currSPlayPause = PlayPauseState.Empty;
                 this.currSCut = CutState.Empty;
+                this.currSDrum = DrumState.Empty;
+                this.currSVolume = VolumeState.Empty;
                 break;
             case "ILoveYou":
                 this.currSPlayPause = PlayPauseState.Empty;
                 this.currSCut = CutState.Empty;
+                this.currSDrum = DrumState.Empty;
+                this.currSVolume = VolumeState.Empty;
                 break;
         }
     }
