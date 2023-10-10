@@ -51,10 +51,10 @@ export class GestureController extends React.Component {
 
     private waveformRef: any = undefined;
 
-    private audioBassdrum : HTMLAudioElement = new Audio('assets/bassdrum.mp3');
-    private audioSnare : HTMLAudioElement = new Audio('assets/dubstep-snare-drum.mp3');
-    private audioElecribe : HTMLAudioElement = new Audio('assets/electribe-hats.mp3');    
-    private audioClap : HTMLAudioElement = new Audio('assets/mega-clap.mp3');
+    private audioBassdrum: HTMLAudioElement = new Audio('assets/bassdrum.mp3');
+    private audioSnare: HTMLAudioElement = new Audio('assets/dubstep-snare-drum.mp3');
+    private audioElecribe: HTMLAudioElement = new Audio('assets/electribe-hats.mp3');
+    private audioClap: HTMLAudioElement = new Audio('assets/mega-clap.mp3');
 
     constructor(props: any) {
         super(props);
@@ -65,7 +65,6 @@ export class GestureController extends React.Component {
         this.audioSnare.preload = 'auto';
         this.audioElecribe.preload = 'auto';
         this.audioClap.preload = 'auto'
-
     }
 
     async createGestureRecognizer() {
@@ -84,13 +83,20 @@ export class GestureController extends React.Component {
         if (this.wsRegions == null) {
             this.wsRegions = this.waveformRef.current?.addPlugin(RegionsPlugin.create({}));
             this.wsRegions.on('region-created', (region: any) => {
-                region.playLoop();
-                console.log(region);
-                console.log("Play region");
+                if(region.loop) {
+                    region.playLoop();
+                    console.log(region);
+                }
             });
             this.wsRegions.on('region-out', (region: any) => {
-                region.play();
-            })
+                if(region.loop) {
+                    region.play();
+                }
+            });
+            this.wsRegions.on('region-removed', (_: any) => {
+                console.log("Region removed");
+                this.waveformRef.current?.play();
+            });
         }
     }
 
@@ -98,7 +104,6 @@ export class GestureController extends React.Component {
         // Now let's start detecting the stream.
         if (this.gestureRecognizer) {
             this.setupCanvas();
-            //this.recogniseGesture();
             let nowInMs = Date.now();
             if (this.video.currentTime !== this.lastVideoTime) {
                 this.lastVideoTime = this.video.currentTime;
@@ -112,22 +117,18 @@ export class GestureController extends React.Component {
     }
 
     private performAction() {
-        if (this.results.gestures.length > 0) {
-            this.gestureOutput.style.display = "block";
-
-            const categoryName = this.results.gestures[0][0].categoryName;
+        for (let i = 0; i < this.results.gestures.length; i++) {
+            const categoryName = this.results.gestures[i][0].categoryName;
             const categoryScore = parseFloat(
-                (this.results.gestures[0][0].score * 100).toString()
+                (this.results.gestures[i][0].score * 100).toString()
             ).toFixed(2);
-            const handedness = this.results.handednesses[0][0].displayName;
+            const handedness = this.results.handednesses[i][0].displayName;
 
             this.gestureOutput.innerText = "Cut State " + this.currSCut;
 
-            this.detectAction(categoryName, categoryScore, handedness, this.results.landmarks[0]);
+            this.detectAction(categoryName, categoryScore, handedness, this.results.landmarks[i]);
             this.handlePlayPause();
             this.handleRegions();
-        } else {
-            this.gestureOutput.style.display = "none";
         }
     }
 
@@ -138,18 +139,25 @@ export class GestureController extends React.Component {
     }
 
     private handleRegions() {
-        if (this.currSCut == CutState.CuttedLeft && this.waveformRef.current) {
+        if (this.currSCut == CutState.ClosedCutLeft && this.loopRegion == undefined && this.waveformRef.current) {
             this.loopRegion = {
                 start: this.waveformRef.current.getCurrentTime(),
-                color: "red",
-                resize: false,
+                color: "#00bcd447",
+                content: 'Start Loop',
+                loop: false,
                 drag: false,
-                loop: true,
+                resize: false,
             };
+            this.wsRegions.addRegion(this.loopRegion);
+        }
+
+        if (this.currSCut == CutState.ClosedCutRight && this.waveformRef.current) {
+            this.loopRegion.end = this.waveformRef.current.getCurrentTime();
+            this.loopRegion.loop = true;
         }
 
         if (this.currSCut == CutState.CuttedCompleted && this.waveformRef.current) {
-            this.loopRegion.end = this.waveformRef.current.getCurrentTime();
+            this.wsRegions.clearRegions();
             this.wsRegions.addRegion(this.loopRegion);
             this.currSCut = CutState.Empty;
         }
@@ -209,23 +217,23 @@ export class GestureController extends React.Component {
                     if (this.closedPoints(landmarks[8], landmarks[4])) {
 
                         console.warn("Index finger action");
-                        this.currSDrum = DrumState.Completed;  
+                        this.currSDrum = DrumState.Completed;
                         // Play the audio in the background
                         this.audioBassdrum.play();
                     }
 
                     //Middle finger action
-                    if(this.closedPoints(landmarks[12], landmarks[4])) {
+                    if (this.closedPoints(landmarks[12], landmarks[4])) {
                         console.warn("Middle finger action");
-            
+
                         // Play the audio in the background
                         this.audioSnare.play();
                     }
 
                     //Ring finger action
-                    if(this.closedPoints(landmarks[16], landmarks[4])) {
+                    if (this.closedPoints(landmarks[16], landmarks[4])) {
                         console.warn("Ring Finger action ");
-            
+
                         // Play the audio in the background
                         this.audioElecribe.play();
                     }
@@ -266,6 +274,10 @@ export class GestureController extends React.Component {
                     case CutState.Empty:
                         if (handedness == "Left") {
                             this.currSCut = CutState.StartCuttingLeft;
+                            if(this.wsRegions != undefined) {
+                                this.wsRegions.clearRegions();
+                            }
+                            this.loopRegion = undefined;
                         }
                         break;
                     case CutState.ClosedCutLeft:
@@ -314,7 +326,7 @@ export class GestureController extends React.Component {
         return this.gestureRecognizer != undefined;
     }
 
-    render() {
+    render(): React.ReactNode {
         return (
             <div>
                 <p id='gesture_output'></p>
