@@ -6,6 +6,8 @@ interface WaveformProps {
   audioUrl: string;
 }
 
+//HOW TO MODIFY THIS MUSIC STREAM WITH EFFECTS ON MUSIC????
+
 //Function class
 const Waveform = React.forwardRef<WaveSurfer | null, WaveformProps>(
   ({ audioUrl }, ref) => {

@@ -62,6 +62,9 @@ export class GestureController extends React.Component {
 
     private audioManager = new AudioManager();
 
+
+    //const [state, setState] = useState(initialState);
+
     private thumbCoordinates : Coordinates = {
         x: 100,
         y: 100
@@ -362,9 +365,32 @@ export class GestureController extends React.Component {
 
     renderLandmarkIcons(results : any) {
 
-        console.warn(results);
+        for (let index = 0; index < results.handedness.length; index++) {
 
-        //this.thumbCoordinates.x += landmarks[]
+            let arrayHand : any = results.handedness[index];
+            let arrayLandmarks : any = results.landmarks[index];
+
+            console.warn(arrayHand);
+            console.warn(arrayLandmarks);
+            console.warn(results);  
+
+            //If the hand detected is the left one, take its relative landmarks to modify the icons coordinates 
+            if(arrayHand[0].categoryName == "Left") {
+
+                console.warn("Entrato in coordinates");
+
+                //TODO 
+
+                this.thumbCoordinates.x = this.thumbCoordinates.x + arrayLandmarks[0].x;
+                this.thumbCoordinates.y = this.thumbCoordinates.y + arrayLandmarks[0].y;
+
+                console.warn(this.thumbCoordinates.x);
+
+            }
+
+            //Make it a Hook to change it dinamically?
+            
+        }
 
     }
 
