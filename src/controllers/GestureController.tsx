@@ -91,6 +91,11 @@ export class GestureController extends React.Component {
         this.video = props.video;
         this.waveformRef = props.waveformRef;
 
+        if(this.waveformRef) {
+            console.warn(this.waveformRef.current.backend.ac);
+            console.warn(this.waveformRef);
+        }
+
         this.setAudioObjects();
 
     }
@@ -385,6 +390,8 @@ export class GestureController extends React.Component {
                 this.thumbCoordinates.y = this.thumbCoordinates.y + arrayLandmarks[0].y;
 
                 console.warn(this.thumbCoordinates.x);
+
+                this.waveformRef
 
             }
 
