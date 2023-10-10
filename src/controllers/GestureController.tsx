@@ -120,109 +120,123 @@ export class GestureController extends React.Component {
             numHands: 2,
             runningMode: "VIDEO"
         });
+
+        if (this.wsRegions == null) {
+            this.wsRegions = this.waveformRef.current?.addPlugin(RegionsPlugin.create({}));
+            this.wsRegions.on('region-created', (region: any) => {
+                if(region.loop) {
+                    region.playLoop();
+                    console.log(region);
+                }
+            });
+            this.wsRegions.on('region-out', (region: any) => {
+                if(region.loop) {
+                    region.play();
+                }
+            });
+            this.wsRegions.on('region-removed', (_: any) => {
+                console.log("Region removed");
+                this.waveformRef.current?.play();
+            });
+        }
     }
 
     predictWebcam() {
         // Now let's start detecting the stream.
         if (this.gestureRecognizer) {
-            this.gestureRecognizer?.setOptions({
-                runningMode: "VIDEO",
-                numHands: 2
-            });
-
+            this.setupCanvas();
             let nowInMs = Date.now();
             if (this.video.currentTime !== this.lastVideoTime) {
                 this.lastVideoTime = this.video.currentTime;
                 this.results = this.gestureRecognizer?.recognizeForVideo(this.video, nowInMs);
                 console.log(this.results);
             }
+            this.drawHands();
+            this.performAction();
+            window.requestAnimationFrame(this.predictWebcam.bind(this));
+        }
+    }
 
+    private performAction() {
+        for (let i = 0; i < this.results.gestures.length; i++) {
+            const categoryName = this.results.gestures[i][0].categoryName;
+            const categoryScore = parseFloat(
+                (this.results.gestures[i][0].score * 100).toString()
+            ).toFixed(2);
+            const handedness = this.results.handednesses[i][0].displayName;
+
+            this.gestureOutput.innerText = "Cut State " + this.currSCut;
+
+            this.detectAction(categoryName, categoryScore, handedness, this.results.landmarks[i]);
+            this.handlePlayPause();
+            this.handleRegions();
+        }
+    }
+
+    private handlePlayPause() {
+        if (this.currSPlayPause == PlayPauseState.Completed && this.waveformRef.current) {
+            this.waveformRef.current.playPause();
+        }
+    }
+
+    private handleRegions() {
+        if (this.currSCut == CutState.ClosedCutLeft && this.loopRegion == undefined && this.waveformRef.current) {
+            this.loopRegion = {
+                start: this.waveformRef.current.getCurrentTime(),
+                color: "#00bcd447",
+                content: 'Start Loop',
+                loop: false,
+                drag: false,
+                resize: false,
+            };
+            this.wsRegions.addRegion(this.loopRegion);
+        }
+
+        if (this.currSCut == CutState.ClosedCutRight && this.waveformRef.current) {
+            this.loopRegion.end = this.waveformRef.current.getCurrentTime();
+            this.loopRegion.loop = true;
+        }
+
+        if (this.currSCut == CutState.CuttedCompleted && this.waveformRef.current) {
+            this.wsRegions.clearRegions();
+            this.wsRegions.addRegion(this.loopRegion);
+            this.currSCut = CutState.Empty;
+        }
+    }
+
+    private setupCanvas() {
+        if (this.gestureOutput == undefined || this.canvasElement == undefined || this.canvasCtx == undefined) {
             this.gestureOutput = document.getElementById("gesture_output") as HTMLOutputElement;
             this.canvasElement = document.getElementById("output_canvas") as HTMLCanvasElement;
             this.canvasCtx = this.canvasElement.getContext("2d");
-
-            if (this.canvasCtx && this.gestureOutput) {
-                this.canvasCtx.save();
-                this.canvasCtx.clearRect(0, 0, this.canvasElement.width, this.canvasElement.height);
-                const drawingUtils = new DrawingUtils(this.canvasCtx);
-
-                this.canvasElement.style.height = this.videoHeight;
-                this.canvasElement.style.width = this.videoWidth;
-
-                //Skeleton of hands detection
-                if (this.results.landmarks) {
-                    for (const landmarks of this.results.landmarks) {
-
-                        //Render icons for the UI
-                        this.renderLandmarkIcons(this.results);
-
-                        drawingUtils.drawConnectors(
-                            landmarks,
-                            GestureRecognizer.HAND_CONNECTIONS,
-                            {
-                                color: "#00FF00",
-                                lineWidth: 5
-                            }
-                        );
-                        drawingUtils.drawLandmarks(landmarks, {
-                            color: "#FF0000",
-                            lineWidth: 2
-                        });
-                    }
-                }
-                this.canvasCtx.restore();
-                if (this.results.gestures.length > 0) {
-                    this.gestureOutput.style.display = "block";
-                    this.gestureOutput.style.width = this.videoWidth;
-
-                    const categoryName = this.results.gestures[0][0].categoryName;
-                    const categoryScore = parseFloat(
-                        (this.results.gestures[0][0].score * 100).toString()
-                    ).toFixed(2);
-
-                    const handedness = this.results.handednesses[0][0].displayName;
-                    this.gestureOutput.innerText = "Cut State " + this.currSCut;
-
-                    this.detectAction(categoryName, categoryScore, handedness, this.results.landmarks[0]);
-
-                    if (this.wsRegions == null) {
-                        this.wsRegions = this.waveformRef.current?.addPlugin(RegionsPlugin.create({}));
-                        this.wsRegions.on('region-created', (region: any) => {
-                            region.playLoop();
-                            //console.log(region);
-                            //console.log("Play region");
-                        });
-                        this.wsRegions.on('region-out', (region: any) => {
-                            region.play();
-                        })
-                    }
-
-                    if (this.currSPlayPause == PlayPauseState.Completed && this.waveformRef.current) {
-                        this.waveformRef.current.playPause();
-                    }
-
-                    if (this.currSCut == CutState.CuttedLeft && this.waveformRef.current) {
-                        this.loopRegion = {
-                            start: this.waveformRef.current.getCurrentTime(),
-                            color: "red",
-                            resize: false,
-                            drag: false,
-                            loop: true,
-                        };
-                    }
-
-                    if (this.currSCut == CutState.CuttedCompleted && this.waveformRef.current) {
-                        this.loopRegion.end = this.waveformRef.current.getCurrentTime();
-                        this.wsRegions.addRegion(this.loopRegion);
-                        this.currSCut = CutState.Empty;
-                    }
-
-                } else {
-                    this.gestureOutput.style.display = "none";
-                }
-            }
-            window.requestAnimationFrame(this.predictWebcam.bind(this));
+            this.canvasElement.style.height = this.videoHeight;
+            this.canvasElement.style.width = this.videoWidth;
+            this.gestureOutput.style.width = this.videoWidth;
         }
+
+        this.canvasCtx.save();
+        this.canvasCtx.clearRect(0, 0, this.canvasElement.width, this.canvasElement.height);
+    }
+
+    private drawHands() {
+        const drawingUtils = new DrawingUtils(this.canvasCtx);
+        if (this.results.landmarks) {
+            for (const landmarks of this.results.landmarks) {
+                drawingUtils.drawConnectors(
+                    landmarks,
+                    GestureRecognizer.HAND_CONNECTIONS,
+                    {
+                        color: "#00FF00",
+                        lineWidth: 5
+                    }
+                );
+                drawingUtils.drawLandmarks(landmarks, {
+                    color: "#FF0000",
+                    lineWidth: 2
+                });
+            }
+        }
+        this.canvasCtx.restore();
     }
 
     detectAction(categoryName: string, categoryScore: any, handedness: string, landmarks: any) {
@@ -263,9 +277,9 @@ export class GestureController extends React.Component {
                     }
 
                     //Ring finger action
-                    if(this.closedPoints(landmarks[16], landmarks[4])) {
+                    if (this.closedPoints(landmarks[16], landmarks[4])) {
                         console.warn("Ring Finger action ");
-            
+
                         // Play the audio in the background
                         this.audioManager.playSound('electribe');
 
@@ -273,7 +287,7 @@ export class GestureController extends React.Component {
                     }
 
                     //Pinky Finger action
-                    if(this.closedPoints(landmarks[20], landmarks[4])) {
+                    if (this.closedPoints(landmarks[20], landmarks[4])) {
                         console.warn("Pincky Finger action ");
 
                         // Play the audio in the background
@@ -324,6 +338,10 @@ export class GestureController extends React.Component {
                     case CutState.Empty:
                         if (handedness == "Left") {
                             this.currSCut = CutState.StartCuttingLeft;
+                            if(this.wsRegions != undefined) {
+                                this.wsRegions.clearRegions();
+                            }
+                            this.loopRegion = undefined;
                         }
                         break;
                     case CutState.ClosedCutLeft:
@@ -433,7 +451,7 @@ export class GestureController extends React.Component {
         return this.gestureRecognizer != undefined;
     }
 
-    render() {
+    render(): React.ReactNode {
         return (
             <div>
                 <p id='gesture_output'></p>
