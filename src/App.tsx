@@ -42,10 +42,8 @@ function App() {
     <>
       <section className="container text-center">
         <Waveform ref={waveformRef} audioUrl={audioUrl} />
-        <div style={{ height: "100vh", width: "auto" }}>
-          <video id="webcam" autoPlay playsInline style={{ display: "none" }}></video>
-          <GestureController ref={controller} />
-        </div>
+        <video id="webcam" autoPlay playsInline style={{ display: "none" }}></video>
+        <GestureController ref={controller} />
       </section>
     </>
   )
