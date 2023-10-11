@@ -204,10 +204,12 @@ export class GestureController extends React.Component {
     private handlePlayPause() {
         if (this.currSPlayPause == PlayPauseState.Completed && this.waveformRef.current) {
             this.waveformRef.current.playPause();
+            this.currSPlayPause = PlayPauseState.Empty;
         }
     }
 
     private handleRegions() {
+
         if (this.currSCut == CutState.ClosedCutLeft && this.loopRegion == undefined && this.waveformRef.current) {
             this.loopRegion = {
                 start: this.waveformRef.current.getCurrentTime(),
@@ -376,21 +378,21 @@ export class GestureController extends React.Component {
                 this.currSVolume = VolumeState.Empty;
                 break;
             case "Closed_Fist":
-                if (handedness == "Right" && this.currSPlayPause == PlayPauseState.Started) {
+                if (handedness == "Right") {
 
-                    console.warn("Pugno chiuso");
+                    if(this.currSPlayPause == PlayPauseState.Started) {
+
+                        console.warn("Pugno chiuso");
+                        this.currSPlayPause = PlayPauseState.Completed;
+
+                    }
                     
-                    this.currSPlayPause = PlayPauseState.Completed;
-                } else {
-                    this.currSPlayPause = PlayPauseState.Empty;
                 }
                 this.currSCut = CutState.Empty;
-                //this.currSDrum = DrumState.Empty;
                 this.currSVolume = VolumeState.Empty;
                 break;
             case "Victory":
                 this.currSPlayPause = PlayPauseState.Empty;
-                //this.currSDrum = DrumState.Empty;
                 this.currSVolume = VolumeState.Empty;
                 switch (this.currSCut) {
                     case CutState.Empty:
@@ -422,19 +424,16 @@ export class GestureController extends React.Component {
             case "Thumbs_Up":
                 this.currSPlayPause = PlayPauseState.Empty;
                 this.currSCut = CutState.Empty;
-                //this.currSDrum = DrumState.Empty;
                 this.currSVolume = VolumeState.Empty;
                 break;
             case "Thumbs_Down":
                 this.currSPlayPause = PlayPauseState.Empty;
                 this.currSCut = CutState.Empty;
-                //this.currSDrum = DrumState.Empty;
                 this.currSVolume = VolumeState.Empty;
                 break;
             case "ILoveYou":
                 this.currSPlayPause = PlayPauseState.Empty;
                 this.currSCut = CutState.Empty;
-                //this.currSDrum = DrumState.Empty;
                 this.currSVolume = VolumeState.Empty;
                 break;
         }
