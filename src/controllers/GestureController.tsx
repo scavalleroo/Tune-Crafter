@@ -32,10 +32,21 @@ enum PlayPauseState {
     Completed = "completed"
 }
 
-enum DrumState {
-    Empty = "empty",
-    StartDrumming = "startedLeft",
-    Completed = "completed"
+enum IndexState {
+    Listening = "listen",
+    Stopping = "stop"
+}
+enum MiddleState {
+    Listening = "listen",
+    Stopping = "stop"
+}
+enum RingState {
+    Listening = "listen",
+    Stopping = "stop"
+}
+enum PickyState {
+    Listening = "listen",
+    Stopping = "stop"
 }
 
 enum VolumeState {
@@ -55,7 +66,10 @@ export class GestureController extends React.Component {
 
     private currSPlayPause: PlayPauseState = PlayPauseState.Empty;
     private currSCut: CutState = CutState.Empty;
-    private currSDrum: DrumState = DrumState.Empty;
+    private currSIndex: IndexState = IndexState.Listening;
+    private currSMiddle: MiddleState = MiddleState.Listening;
+    private currSRing: RingState = RingState.Listening;
+    private currSPincky: PickyState = PickyState.Listening;
     private currSVolume: VolumeState = VolumeState.Empty;
 
     private results: any = undefined;
@@ -171,6 +185,7 @@ export class GestureController extends React.Component {
             this.gestureOutput.innerText = "Cut State " + this.currSCut;
 
             this.detectAction(categoryName, categoryScore, handedness, this.results.landmarks[i]);
+            this.handleDrums(handedness, this.results.landmarks[i]);
             this.handlePlayPause();
             this.handleRegions();
             this.handleVolume();
@@ -217,6 +232,80 @@ export class GestureController extends React.Component {
         }
     }
 
+    private handleDrums(handedness : string, landmarks: any) {
+        
+        //DRUMS detect and managing
+        if(handedness == "Left") {
+
+            //Audio to put in async to play them without overriding everything (?)
+
+            //Index finger action
+            if(this.closedPoints(landmarks[8], landmarks[4])) {
+                console.warn("Index finger action");
+
+                if(this.currSIndex == IndexState.Listening) {
+                    // Play the audio in the background
+                    this.audioManager.playSound('bassdrum');
+
+                    this.currSIndex = IndexState.Stopping;
+                }
+                
+            }
+            else {
+                this.currSIndex = IndexState.Listening;
+            }
+
+            //Middle finger action
+            if(this.closedPoints(landmarks[12], landmarks[4])) {
+                console.warn("Middle finger action"); 
+    
+                if(this.currSMiddle == MiddleState.Listening) {
+                    // Play the audio in the background
+                    this.audioManager.playSound('snare');
+
+                    this.currSMiddle = MiddleState.Stopping;
+                }
+            }
+            else {
+                this.currSMiddle = MiddleState.Listening;
+            }
+
+            //Ring finger action
+            if (this.closedPoints(landmarks[16], landmarks[4])) {
+                console.warn("Ring Finger action ");
+
+                if(this.currSRing == RingState.Listening) {
+                    // Play the audio in the background
+                    this.audioManager.playSound('electribe');
+
+                    this.currSRing = RingState.Stopping;
+                }
+                
+            }
+            else {
+                this.currSRing = RingState.Listening;
+            }
+
+            //Pinky Finger action
+            if (this.closedPoints(landmarks[20], landmarks[4])) {
+                console.warn("Pincky Finger action ");
+
+                if(this.currSPincky == PickyState.Listening) {
+                    // Play sounds
+                    this.audioManager.playSound('clap');
+
+                    this.currSPincky = PickyState.Stopping;
+                }
+                
+            }
+            else {
+                this.currSPincky = PickyState.Listening;
+            }
+
+        }
+    }
+
+
     private setupCanvas() {
         if (this.gestureOutput == undefined || this.canvasElement == undefined || this.canvasCtx == undefined) {
             this.gestureOutput = document.getElementById("gesture_output") as HTMLOutputElement;
@@ -253,7 +342,7 @@ export class GestureController extends React.Component {
     }
 
     detectAction(categoryName: string, categoryScore: any, handedness: string, landmarks: any) {
-        console.log(categoryScore);
+        console.warn(categoryName);
         switch (categoryName) {
             case "None":
                 if (this.currSCut == CutState.StartCuttingLeft && handedness == "Left" && this.closedPoints(landmarks[6], landmarks[10]) && this.closedPoints(landmarks[7], landmarks[11]) && this.closedPoints(landmarks[8], landmarks[12])) {
@@ -264,53 +353,7 @@ export class GestureController extends React.Component {
                     }
                 }
 
-                //DRUMS detect and managing
-                if(this.currSDrum == DrumState.StartDrumming && handedness == "Left") {
-
-                    //Audio to put in async to play them without overriding everything (?)
-
-                    //Index finger action
-                    if(this.closedPoints(landmarks[8], landmarks[4])) {
-                        console.warn("Index finger action");
-
-                        // Play the audio in the background
-                        this.audioManager.playSound('bassdrum');
-
-                        this.currSDrum = DrumState.Completed;
-                    }
-
-                    //Middle finger action
-                    if(this.closedPoints(landmarks[12], landmarks[4])) {
-                        console.warn("Middle finger action"); 
-            
-                        // Play the audio in the background
-                        this.audioManager.playSound('snare');
-
-                        this.currSDrum = DrumState.Completed;
-                    }
-
-                    //Ring finger action
-                    if (this.closedPoints(landmarks[16], landmarks[4])) {
-                        console.warn("Ring Finger action ");
-
-                        // Play the audio in the background
-                        this.audioManager.playSound('electribe');
-
-                        this.currSDrum = DrumState.Completed;
-                    }
-
-                    //Pinky Finger action
-                    if (this.closedPoints(landmarks[20], landmarks[4])) {
-                        console.warn("Pincky Finger action ");
-
-                        // Play the audio in the background
-                        // Play sounds
-                        this.audioManager.playSound('clap');
-
-                        this.currSDrum = DrumState.Completed;
-                    }
-
-                }
+                //this.handleDrums(handedness, landmarks);
 
                 break;
             case "Pointing_Up":
@@ -324,9 +367,11 @@ export class GestureController extends React.Component {
                 if (handedness == "Right") {
                     this.currSPlayPause = PlayPauseState.Started;
                 }
+                /*
                 else if(handedness == "Left") {
                     this.currSDrum = DrumState.StartDrumming;
                 }
+                */
                 this.currSCut = CutState.Empty;
                 this.currSVolume = VolumeState.Empty;
                 break;
@@ -340,12 +385,12 @@ export class GestureController extends React.Component {
                     this.currSPlayPause = PlayPauseState.Empty;
                 }
                 this.currSCut = CutState.Empty;
-                this.currSDrum = DrumState.Empty;
+                //this.currSDrum = DrumState.Empty;
                 this.currSVolume = VolumeState.Empty;
                 break;
             case "Victory":
                 this.currSPlayPause = PlayPauseState.Empty;
-                this.currSDrum = DrumState.Empty;
+                //this.currSDrum = DrumState.Empty;
                 this.currSVolume = VolumeState.Empty;
                 switch (this.currSCut) {
                     case CutState.Empty:
@@ -377,19 +422,19 @@ export class GestureController extends React.Component {
             case "Thumbs_Up":
                 this.currSPlayPause = PlayPauseState.Empty;
                 this.currSCut = CutState.Empty;
-                this.currSDrum = DrumState.Empty;
+                //this.currSDrum = DrumState.Empty;
                 this.currSVolume = VolumeState.Empty;
                 break;
             case "Thumbs_Down":
                 this.currSPlayPause = PlayPauseState.Empty;
                 this.currSCut = CutState.Empty;
-                this.currSDrum = DrumState.Empty;
+                //this.currSDrum = DrumState.Empty;
                 this.currSVolume = VolumeState.Empty;
                 break;
             case "ILoveYou":
                 this.currSPlayPause = PlayPauseState.Empty;
                 this.currSCut = CutState.Empty;
-                this.currSDrum = DrumState.Empty;
+                //this.currSDrum = DrumState.Empty;
                 this.currSVolume = VolumeState.Empty;
                 break;
         }
