@@ -1,5 +1,5 @@
 import React from "react";
-import { socket } from "../socket-client";
+import { socket } from "../utils/SocketClient";
 
 export class HartRateComponent extends React.Component {
 
@@ -14,7 +14,7 @@ export class HartRateComponent extends React.Component {
     onConnect() {
         socket.emit("connect_web_client");
         console.log("Connected: " + socket.id);
-        document.getElementById('harthRate')!.innerHTML = "Connected to webserver\nWaiting for hart rate...";
+        document.getElementById('harthRate')!.innerHTML = "Connected to webserver. Waiting for hart rate...";
     }
 
     onDisconnect() {
