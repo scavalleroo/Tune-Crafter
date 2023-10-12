@@ -1,9 +1,10 @@
-import './App.css';
 import React, { useRef, useEffect } from "react";
 import { hasGetUserMedia } from './utils/helpers';
 import { GestureController } from './controllers/GestureController';
 import Waveform from './components/customWawesurfer';
 import { HartRateComponent } from './components/hartRateComponent';
+import './App.css';
+import 'bootstrap/dist/css/bootstrap.css'
 
 function App() {
 

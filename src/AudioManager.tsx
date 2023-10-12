@@ -3,8 +3,6 @@ import AudioScheduler from "./AudioScheduler";
 //Make it a function calss?
 export class AudioManager {
 
-    //GESTIRE I SUONI IN MANIERA SINCRONIZZATA. TUTTI DEVONO DURARE LO STESSO. FAR PARTIRE DIVERSI THREAD (?)
-
     private audioContext: AudioContext | null; 
     private audioBufferMap: Map<string, AudioBuffer>;  //With each sound
     private audioScheduler : AudioScheduler;
@@ -30,14 +28,21 @@ export class AudioManager {
       if (!this.audioContext) {
         this.initializeAudioContext();
       }
-  
+
       if (this.audioContext) {
+        this.createAudioContext(this.audioContext, name, url);
+      }
+      
+    }
+
+    public async createAudioContext(audioContext : AudioContext, name: string, url: string) {
+
         const response = await fetch(url);
         const audioData = await response.arrayBuffer();
-        const audioBuffer = await this.audioContext.decodeAudioData(audioData);
+        const audioBuffer = await audioContext.decodeAudioData(audioData);
   
         this.audioBufferMap.set(name, audioBuffer);
-      }
+     
     }
   
     // Play a loaded sound

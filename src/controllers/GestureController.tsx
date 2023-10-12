@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import RegionsPlugin from 'wavesurfer.js/src/plugin/regions';
+import './GestureController.css';
+import 'bootstrap/dist/css/bootstrap.css'
 
 import {
     GestureRecognizer,
@@ -8,6 +10,8 @@ import {
 } from '../../node_modules/@mediapipe/tasks-vision';
 import { AudioManager } from "../AudioManager";
 import IconsUI from "../IconsUI";
+import { warn } from "console";
+import VolumeProgressBar from "../components/volumeProgressBar";
 
 //Icons coordinates
 interface Coordinates {
@@ -84,8 +88,10 @@ export class GestureController extends React.Component {
 
     private audioManager = new AudioManager();
 
+    //AudioContext for the main music
+    //private mainAudioContext : AudioContext | null= null;
 
-    //const [state, setState] = useState(initialState);
+    private volume : number = 50;
 
     private thumbCoordinates : Coordinates = {
         x: 100,
@@ -110,12 +116,16 @@ export class GestureController extends React.Component {
 
     constructor(props: any) {
         super(props);
+
         this.video = props.video;
         this.waveformRef = props.waveformRef;
 
         if(this.waveformRef) {
             console.warn(this.waveformRef.current.backend.ac);
             console.warn(this.waveformRef);
+
+            //Gestione Effetti
+
         }
 
         this.setAudioObjects();
@@ -155,7 +165,7 @@ export class GestureController extends React.Component {
         }
     }
 
-    predictWebcam() {
+    predictWebcam(): void {
         // Now let's start detecting the stream.
         if (this.gestureRecognizer) {
             this.setupCanvas();
@@ -188,17 +198,20 @@ export class GestureController extends React.Component {
             this.handleDrums(handedness, this.results.landmarks[i]);
             this.handlePlayPause();
             this.handleRegions();
-            this.handleVolume();
+            this.handleVolume(this.results.landmarks[i]);
         }
     }
 
-    private handleVolume() {
+    private handleVolume(landmarks : any) {
 
         if(this.currSVolume == VolumeState.Started) {
-            console.warn("EEEEEEEEEEEEE SONO PARTITO");
+            this.volume = landmarks[8].y;
             
-        }
+            console.warn(this.volume*100);
+            
+            this.waveformRef.current.setVolume(this.volume);
 
+        }
     }
 
     private handlePlayPause() {
@@ -243,7 +256,6 @@ export class GestureController extends React.Component {
 
             //Index finger action
             if(this.closedPoints(landmarks[8], landmarks[4])) {
-                console.warn("Index finger action");
 
                 if(this.currSIndex == IndexState.Listening) {
                     // Play the audio in the background
@@ -259,8 +271,7 @@ export class GestureController extends React.Component {
 
             //Middle finger action
             if(this.closedPoints(landmarks[12], landmarks[4])) {
-                console.warn("Middle finger action"); 
-    
+                
                 if(this.currSMiddle == MiddleState.Listening) {
                     // Play the audio in the background
                     this.audioManager.playSound('snare');
@@ -274,7 +285,6 @@ export class GestureController extends React.Component {
 
             //Ring finger action
             if (this.closedPoints(landmarks[16], landmarks[4])) {
-                console.warn("Ring Finger action ");
 
                 if(this.currSRing == RingState.Listening) {
                     // Play the audio in the background
@@ -290,7 +300,6 @@ export class GestureController extends React.Component {
 
             //Pinky Finger action
             if (this.closedPoints(landmarks[20], landmarks[4])) {
-                console.warn("Pincky Finger action ");
 
                 if(this.currSPincky == PickyState.Listening) {
                     // Play sounds
@@ -345,6 +354,7 @@ export class GestureController extends React.Component {
 
     detectAction(categoryName: string, categoryScore: any, handedness: string, landmarks: any) {
         console.warn(categoryName);
+        console.warn(categoryScore);
         switch (categoryName) {
             case "None":
                 if (this.currSCut == CutState.StartCuttingLeft && handedness == "Left" && this.closedPoints(landmarks[6], landmarks[10]) && this.closedPoints(landmarks[7], landmarks[11]) && this.closedPoints(landmarks[8], landmarks[12])) {
@@ -354,6 +364,8 @@ export class GestureController extends React.Component {
                         this.currSCut = CutState.ClosedCutRight;
                     }
                 }
+
+                this.currSVolume = VolumeState.Empty;
 
                 //this.handleDrums(handedness, landmarks);
 
@@ -369,11 +381,6 @@ export class GestureController extends React.Component {
                 if (handedness == "Right") {
                     this.currSPlayPause = PlayPauseState.Started;
                 }
-                /*
-                else if(handedness == "Left") {
-                    this.currSDrum = DrumState.StartDrumming;
-                }
-                */
                 this.currSCut = CutState.Empty;
                 this.currSVolume = VolumeState.Empty;
                 break;
@@ -381,10 +388,7 @@ export class GestureController extends React.Component {
                 if (handedness == "Right") {
 
                     if(this.currSPlayPause == PlayPauseState.Started) {
-
-                        console.warn("Pugno chiuso");
                         this.currSPlayPause = PlayPauseState.Completed;
-
                     }
                     
                 }
@@ -509,17 +513,24 @@ export class GestureController extends React.Component {
     }
 
     render(): React.ReactNode {
+
         return (
-            <div>
-                <p id='gesture_output'></p>
-                <IconsUI x={this.thumbCoordinates.x} y={this.thumbCoordinates.y}></IconsUI>
-                <IconsUI x={this.indexCoordinates.x} y={this.indexCoordinates.y}></IconsUI>
-                <IconsUI x={this.middleCoordinates.x} y={this.middleCoordinates.y}></IconsUI>
-                <IconsUI x={this.ringCoordinates.x} y={this.ringCoordinates.y}></IconsUI>
-                <IconsUI x={this.pinkyCoordinates.x} y={this.pinkyCoordinates.y}></IconsUI>
-                <canvas className="output_canvas" id="output_canvas" width="1280" height="720" style={{ margin: "0 auto", border: "1px solid #000000", width: "auto", height: "100%" }}>  
-                </canvas>
-            </div>
+            <>
+                <div>
+                    <p id='gesture_output'></p>
+                    <IconsUI x={this.thumbCoordinates.x} y={this.thumbCoordinates.y}></IconsUI>
+                    <IconsUI x={this.indexCoordinates.x} y={this.indexCoordinates.y}></IconsUI>
+                    <IconsUI x={this.middleCoordinates.x} y={this.middleCoordinates.y}></IconsUI>
+                    <IconsUI x={this.ringCoordinates.x} y={this.ringCoordinates.y}></IconsUI>
+                    <IconsUI x={this.pinkyCoordinates.x} y={this.pinkyCoordinates.y}></IconsUI>
+                    <canvas className="output_canvas" id="output_canvas" width="1280" height="720" style={{ margin: "0 auto", border: "1px solid #000000", width: "auto", height: "100%" }}>  
+                    </canvas>
+                    
+                </div>
+                <div className="custom-progress">
+                    <VolumeProgressBar volume={this.volume}></VolumeProgressBar>
+                </div>
+            </>
         );
     }
 }
