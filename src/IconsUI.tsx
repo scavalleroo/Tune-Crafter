@@ -1,6 +1,6 @@
 import React from 'react';
 import './App.css';
-import Coordinates from './controllers/GestureController';
+import { Coordinates } from './controllers/GestureController';
 
 function IconsUI({x, y} : Coordinates) {
 
