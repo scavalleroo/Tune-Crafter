@@ -3,6 +3,7 @@ import React, { useRef, useEffect } from "react";
 import { hasGetUserMedia } from './utils/helpers';
 import { GestureController } from './controllers/GestureController';
 import Waveform from './components/customWawesurfer';
+import { HartRateComponent } from './components/hartRateComponent';
 
 function App() {
 
@@ -41,6 +42,7 @@ function App() {
   return (
     <>
       <section className="container text-center">
+        <HartRateComponent />
         <Waveform ref={waveformRef} audioUrl={audioUrl} />
         <video id="webcam" autoPlay playsInline style={{ display: "none" }}></video>
         <GestureController ref={controller} />
