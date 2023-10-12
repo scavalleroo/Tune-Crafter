@@ -1,11 +1,17 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import RegionsPlugin from 'wavesurfer.js/src/plugin/regions';
+import './GestureController.css';
+import 'bootstrap/dist/css/bootstrap.css';
+import { GestureRecognizer, FilesetResolver, DrawingUtils } from '../../node_modules/@mediapipe/tasks-vision';
+import { AudioManager } from "../AudioManager";
+import IconsUI from "../IconsUI";
+import VolumeProgressBar from "../components/volumeProgressBar";
+import WaveSurfer from "wavesurfer.js";
 
-import {
-    GestureRecognizer,
-    FilesetResolver,
-    DrawingUtils
-} from '../../node_modules/@mediapipe/tasks-vision';
+export interface Coordinates {
+    x: number;
+    y: number;
+}
 
 enum CutState {
     Empty = "empty",
@@ -23,140 +29,247 @@ enum PlayPauseState {
     Completed = "completed"
 }
 
-export class GestureController extends React.Component {
-    private video: HTMLVideoElement;
-    private lastVideoTime: number = -1;
-    private gestureRecognizer: GestureRecognizer | undefined = undefined;
+enum IndexState {
+    Listening = "listen",
+    Stopping = "stop"
+}
 
-    private gestureOutput: any = undefined;
-    private canvasElement: any = undefined;
+enum MiddleState {
+    Listening = "listen",
+    Stopping = "stop"
+}
 
-    private currSPlayPause: PlayPauseState = PlayPauseState.Empty;
-    private currSCut: CutState = CutState.Empty;
+enum RingState {
+    Listening = "listen",
+    Stopping = "stop"
+}
 
-    private results: any = undefined;
-    private loopRegion: any = undefined;
-    private canvasCtx: any = undefined;
-    private wsRegions: any = undefined;
+enum PickyState {
+    Listening = "listen",
+    Stopping = "stop"
+}
 
-    private videoHeight: string = "100vh";
-    private videoWidth: string = "auto";
+enum VolumeState {
+    Empty = "empty",
+    Started = "startedManagingVolume",
+    Increasing = "increasing",
+    Decreasing = "decreasing"
+}
 
-    private waveformRef: any = undefined;
+interface GestureControllerProps {
+    video: HTMLVideoElement | null,
+    waveform : WaveSurfer | null
+}
 
-    constructor(props: any) {
-        super(props);
-        this.video = props.video;
-        this.waveformRef = props.waveformRef;
-        if (this.wsRegions == null) {
-            this.wsRegions = this.waveformRef.current?.addPlugin(RegionsPlugin.create({}));
-            this.wsRegions.on('region-created', (region: any) => {
-                region.playLoop();
-                console.log(region);
-                console.log("Play region");
-            });
-            this.wsRegions.on('region-out', (region: any) => {
-                region.play();
-            })
+const GestureController = (props: GestureControllerProps) => {
+    const video = props.video;
+    const waveform = props.waveform;
+    var gestureRecognizer : GestureRecognizer | null = null;
+    var gestureOutput : any | null = null;
+    var canvasElement : any | null = null;
+    var canvasCtx : any | null = null;
+    //var [gestureRecognizer, setGestureRecognizer] = useState<GestureRecognizer | null>(null);
+    //var [gestureOutput, setGestureOutput] = useState<any>(null);
+    //var [canvasElement, canvasElement] = useState<any>(null);
+    //var [canvasCtx, setCanvasCtx] = useState<any>(null);
+
+    /*
+    const [currSPlayPause, setCurrSPlayPause] = useState<PlayPauseState>(PlayPauseState.Empty);
+    const [currSCut, setCurrSCut] = useState<CutState>(CutState.Empty);
+    const [currSIndex, setCurrSIndex] = useState<IndexState>(IndexState.Listening);
+    const [currSMiddle, setCurrSMiddle] = useState<MiddleState>(MiddleState.Listening);
+    const [currSRing, setCurrSRing] = useState<RingState>(RingState.Listening);
+    const [currSPincky, setCurrSPincky] = useState<PickyState>(PickyState.Listening);
+    const [currSVolume, setCurrSVolume] = useState<VolumeState>(VolumeState.Empty);
+    */
+
+    var currSPlayPause: PlayPauseState = PlayPauseState.Empty;
+    var currSCut: CutState = CutState.Empty;
+    var currSIndex: IndexState = IndexState.Listening;
+    var currSMiddle: MiddleState = MiddleState.Listening;
+    var currSRing: RingState = RingState.Listening;
+    var currSPincky: PickyState = PickyState.Listening;
+    var currSVolume: VolumeState = VolumeState.Empty;
+
+    var results: any = undefined;
+    var loopRegion: any = undefined;
+    var canvasCtx: any = undefined;
+    var wsRegions: any = undefined;
+
+    //var [results, setResults] = useState<any>(undefined);
+    var results : any | null = null;
+    //const [loopRegion, setLoopRegion] = useState<any>(undefined);
+    //const [wsRegions, setWsRegions] = useState<any>(undefined);
+
+    const videoHeight = "100vh";
+    const videoWidth = "auto";
+    //const waveform = useRef<any>(null);
+    const audioManager = new AudioManager();
+    const [volume, setVolume] = useState<number>(50);
+
+    var lastVideoTime : any = -1;
+
+    var thumbCoordinates: Coordinates = {
+        x: 100,
+        y: 100
+    };
+    var indexCoordinates: Coordinates = {
+        x: 200,
+        y: 200
+    };
+    var middleCoordinates: Coordinates = {
+        x: 300,
+        y: 300
+    };
+    var ringCoordinates: Coordinates = {
+        x: 400,
+        y: 400
+    };
+    var pinkyCoordinates: Coordinates = {
+        x: 500,
+        y: 500
+    };
+
+    useEffect(() => {
+
+        console.warn("FIRST useEffect");
+        console.warn(video);
+        console.warn(waveform);
+
+        if (video && waveform) {
+
+            console.warn("ARRIVATIIIIII");
+
+            console.warn(video);
+            console.warn(waveform);
+    
+            if(video) {
+                createGestureRecognizer().then(() => {
+                    video?.addEventListener("loadeddata", predictWebcam);
+                    window.requestAnimationFrame(predictWebcam.bind(this));
+                  });
+            }
         }
-    }
+        
+    }, [video, waveform]);
 
-    async createGestureRecognizer() {
-        const vision = await FilesetResolver.forVisionTasks(
-            "../../node_modules/@mediapipe/tasks-vision/wasm",
-        );
-        this.gestureRecognizer = await GestureRecognizer.createFromOptions(vision, {
+    useEffect(() => {
+
+        console.warn("second useEffect");
+        console.warn(video);
+        console.warn(waveform);
+
+        if (waveform) {
+            console.warn(waveform);
+            // Handle Effects
+        }
+        setAudioObjects();
+    }, [waveform]);
+
+    // Add other useEffect hooks as needed
+
+    const createGestureRecognizer = async () => {
+
+        const vision = await FilesetResolver.forVisionTasks("../../node_modules/@mediapipe/tasks-vision/wasm");
+        const recognizer = await GestureRecognizer.createFromOptions(vision, {
             baseOptions: {
-                modelAssetPath:
-                    "../../public/models/gesture_recognizer.task"
+                modelAssetPath: "../../public/models/gesture_recognizer.task"
             },
             numHands: 2,
             runningMode: "VIDEO"
         });
-    }
+        gestureRecognizer = recognizer;
+        //setGestureRecognizer(recognizer);
 
-    predictWebcam() {
+        if (wsRegions == null) {
+            const regions = waveform?.addPlugin(RegionsPlugin.create({}));
+            regions?.on('region-created', (region: any) => {
+                if (region.loop) {
+                    region.playLoop();
+                    console.log(region);
+                }
+            });
+            regions?.on('region-out', (region: any) => {
+                if (region.loop) {
+                    region.play();
+                }
+            });
+            regions?.on('region-removed', (_: any) => {
+                console.log("Region removed");
+                waveform?.play();
+            });
+            wsRegions = regions;
+        }
+    };
+
+    const predictWebcam = () => {
+
         // Now let's start detecting the stream.
-        if (this.gestureRecognizer) {
-            this.setupCanvas();
-            this.recogniseGesture();
-            this.drawHands();
-            this.performAction();
-            window.requestAnimationFrame(this.predictWebcam.bind(this));
+        if (gestureRecognizer) {
+
+            setupCanvas();
+            let nowInMs = Date.now();
+            if (video?.currentTime !== lastVideoTime) {
+                lastVideoTime = video!.currentTime;
+                const newResults = gestureRecognizer?.recognizeForVideo(video!, nowInMs);
+                results = newResults;
+                console.log(newResults);
+            }
+            drawHands();
+            performAction();
+            window.requestAnimationFrame(predictWebcam.bind(this));
         }
+        else {
+            console.warn("POOOOOOOOOOOOOH");
+            console.warn(gestureRecognizer);
+        }
+    };
+
+    const setAudioObjects = () => {
+
+
+        console.warn("QUA ENTRA PER FORA ZIO CONAGLIA");
+        
+
+        /*
+        this.audioBassdrum.preload = 'auto';
+        this.audioSnare.preload = 'auto';
+        this.audioElecribe.preload = 'auto';
+        this.audioClap.preload = 'auto'
+
+        this.audioBassdrum.volume = 1.0;
+        this.audioSnare.volume = 1.0;
+        this.audioElecribe.volume = 1.0;
+        this.audioClap.volume = 1.0;
+        */
+
+        // Load audio files
+        //this.audioManager.loadSound('mainMusic', 'assets/audio.mp3')
+        audioManager.loadSound('bassdrum', 'assets/bassdrum.mp3');
+        audioManager.loadSound('snare', 'assets/dubstep-snare-drum.mp3');
+        audioManager.loadSound('electribe', 'assets/electribe-hats.mp3');
+        audioManager.loadSound('clap', 'assets/mega-clap.mp3');
+        
     }
 
-    private performAction() {
-        if (this.results.gestures.length > 0) {
-            this.gestureOutput.style.display = "block";
-
-            const categoryName = this.results.gestures[0][0].categoryName;
-            const categoryScore = parseFloat(
-                (this.results.gestures[0][0].score * 100).toString()
-            ).toFixed(2);
-            const handedness = this.results.handednesses[0][0].displayName;
-
-            this.gestureOutput.innerText = "Cut State " + this.currSCut;
-
-            this.detectAction(categoryName, categoryScore, handedness, this.results.landmarks[0]);
-            this.handlePlayPause();
-            this.handleRegions();
-        } else {
-            this.gestureOutput.style.display = "none";
+    const setupCanvas = () => {
+        if (gestureOutput == undefined || canvasElement == undefined || canvasCtx == undefined) {
+            gestureOutput = document.getElementById("gesture_output") as HTMLOutputElement;
+            canvasElement = document.getElementById("output_canvas") as HTMLCanvasElement;
+            canvasCtx = canvasElement.getContext("2d");
+            canvasElement.style.height = videoHeight;
+            canvasElement.style.width = videoWidth;
+            gestureOutput.style.width = videoWidth;
         }
+
+        canvasCtx.save();
+        canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
     }
 
-    private recogniseGesture() {
-        let nowInMs = Date.now();
-        if (this.video.currentTime !== this.lastVideoTime) {
-            this.lastVideoTime = this.video.currentTime;
-            this.results = this.gestureRecognizer?.recognizeForVideo(this.video, nowInMs);
-            console.log(this.results);
-        }
-    }
-
-    private handlePlayPause() {
-        if (this.currSPlayPause == PlayPauseState.Completed && this.waveformRef.current) {
-            this.waveformRef.current.playPause();
-        }
-    }
-
-    private handleRegions() {
-        if (this.currSCut == CutState.CuttedLeft && this.waveformRef.current) {
-            this.loopRegion = {
-                start: this.waveformRef.current.getCurrentTime(),
-                color: "red",
-                resize: false,
-                drag: false,
-                loop: true,
-            };
-        }
-
-        if (this.currSCut == CutState.CuttedCompleted && this.waveformRef.current) {
-            this.loopRegion.end = this.waveformRef.current.getCurrentTime();
-            this.wsRegions.addRegion(this.loopRegion);
-            this.currSCut = CutState.Empty;
-        }
-    }
-
-    private setupCanvas() {
-        if (this.gestureOutput == undefined || this.canvasElement == undefined || this.canvasCtx == undefined) {
-            this.gestureOutput = document.getElementById("gesture_output") as HTMLOutputElement;
-            this.canvasElement = document.getElementById("output_canvas") as HTMLCanvasElement;
-            this.canvasCtx = this.canvasElement.getContext("2d");
-            this.canvasElement.style.height = this.videoHeight;
-            this.canvasElement.style.width = this.videoWidth;
-            this.gestureOutput.style.width = this.videoWidth;
-        }
-
-        this.canvasCtx.save();
-        this.canvasCtx.clearRect(0, 0, this.canvasElement.width, this.canvasElement.height);
-    }
-
-    private drawHands() {
-        const drawingUtils = new DrawingUtils(this.canvasCtx);
-        if (this.results.landmarks) {
-            for (const landmarks of this.results.landmarks) {
+    const drawHands = () => {
+        const drawingUtils = new DrawingUtils(canvasCtx);
+        if (results.landmarks) {
+            for (const landmarks of results.landmarks) {
                 drawingUtils.drawConnectors(
                     landmarks,
                     GestureRecognizer.HAND_CONNECTIONS,
@@ -171,80 +284,125 @@ export class GestureController extends React.Component {
                 });
             }
         }
-        this.canvasCtx.restore();
+        canvasCtx.restore();
     }
 
-    detectAction(categoryName: string, categoryScore: any, handedness: string, landmarks: any) {
-        console.log(categoryScore);
+    const performAction = () => {
+
+        console.warn("performAction");
+        
+
+        //In modalità doppia mano non ferma la musica
+
+        for (let i = 0; i < results.gestures.length; i++) {
+            const categoryName = results.gestures[i][0].categoryName;
+            const categoryScore = parseFloat(
+                (results.gestures[i][0].score * 100).toString()
+            ).toFixed(2);
+            const handedness = results.handednesses[i][0].displayName;
+
+            gestureOutput.innerText = "Cut State " + currSCut;
+
+            detectAction(categoryName, categoryScore, handedness, results.landmarks[i]);
+            handleDrums(handedness, results.landmarks[i]);
+            handlePlayPause();
+            handleRegions();
+            handleVolume(results.landmarks[i]);
+        }
+    }
+
+    const detectAction = (categoryName: string, categoryScore: any, handedness: string, landmarks: any) => {
+        console.warn(categoryName);
+        console.warn(categoryScore);
         switch (categoryName) {
             case "None":
-                if (this.currSCut == CutState.StartCuttingLeft && handedness == "Left" && this.closedPoints(landmarks[6], landmarks[10]) && this.closedPoints(landmarks[7], landmarks[11]) && this.closedPoints(landmarks[8], landmarks[12])) {
-                    this.currSCut = CutState.ClosedCutLeft;
+                if (currSCut == CutState.StartCuttingLeft && handedness == "Left" && closedPoints(landmarks[6], landmarks[10]) && closedPoints(landmarks[7], landmarks[11]) && closedPoints(landmarks[8], landmarks[12])) {
+                    currSCut = CutState.ClosedCutLeft;
                 } else {
-                    if (this.currSCut == CutState.StartCuttingRight && handedness == "Right" && this.closedPoints(landmarks[6], landmarks[10]) && this.closedPoints(landmarks[7], landmarks[11]) && this.closedPoints(landmarks[8], landmarks[12])) {
-                        this.currSCut = CutState.ClosedCutRight;
+                    if (currSCut == CutState.StartCuttingRight && handedness == "Right" && closedPoints(landmarks[6], landmarks[10]) && closedPoints(landmarks[7], landmarks[11]) && closedPoints(landmarks[8], landmarks[12])) {
+                        currSCut = CutState.ClosedCutRight;
                     }
                 }
+
+                currSVolume = VolumeState.Empty;
+
+                //handleDrums(handedness, landmarks);
+
                 break;
             case "Pointing_Up":
-                this.currSPlayPause = PlayPauseState.Empty;
-                this.currSCut = CutState.Empty;
+                currSPlayPause = PlayPauseState.Empty;
+                currSCut = CutState.Empty;
+                if(handedness == "Right") {
+                    currSVolume = VolumeState.Started;
+                }
                 break;
             case "Open_Palm":
                 if (handedness == "Right") {
-                    this.currSPlayPause = PlayPauseState.Started;
+                    currSPlayPause = PlayPauseState.Started;
                 }
-                this.currSCut = CutState.Empty;
+                currSCut = CutState.Empty;
+                currSVolume = VolumeState.Empty;
                 break;
             case "Closed_Fist":
-                if (handedness == "Right" && this.currSPlayPause == PlayPauseState.Started) {
-                    this.currSPlayPause = PlayPauseState.Completed;
-                } else {
-                    this.currSPlayPause = PlayPauseState.Empty;
+                if (handedness == "Right") {
+
+                    if(currSPlayPause == PlayPauseState.Started) {
+                        currSPlayPause = PlayPauseState.Completed;
+                    }
+                    
                 }
-                this.currSCut = CutState.Empty;
+                currSCut = CutState.Empty;
+                currSVolume = VolumeState.Empty;
                 break;
             case "Victory":
-                this.currSPlayPause = PlayPauseState.Empty;
-                switch (this.currSCut) {
+                currSPlayPause = PlayPauseState.Empty;
+                currSVolume = VolumeState.Empty;
+                switch (currSCut) {
                     case CutState.Empty:
                         if (handedness == "Left") {
-                            this.currSCut = CutState.StartCuttingLeft;
+                            currSCut = CutState.StartCuttingLeft;
+                            if(wsRegions != undefined) {
+                                wsRegions.clearRegions();
+                            }
+                            loopRegion = undefined;
                         }
                         break;
                     case CutState.ClosedCutLeft:
                         if (handedness == "Left") {
-                            this.currSCut = CutState.CuttedLeft;
+                            currSCut = CutState.CuttedLeft;
                         }
                         break;
                     case CutState.CuttedLeft:
                         if (handedness == "Right") {
-                            this.currSCut = CutState.StartCuttingRight;
+                            currSCut = CutState.StartCuttingRight;
                         }
                         break;
                     case CutState.ClosedCutRight:
                         if (handedness == "Right") {
-                            this.currSCut = CutState.CuttedCompleted;
+                            currSCut = CutState.CuttedCompleted;
                         }
                         break;
                 }
                 break;
             case "Thumbs_Up":
-                this.currSPlayPause = PlayPauseState.Empty;
-                this.currSCut = CutState.Empty;
+                currSPlayPause = PlayPauseState.Empty;
+                currSCut = CutState.Empty;
+                currSVolume = VolumeState.Empty;
                 break;
             case "Thumbs_Down":
-                this.currSPlayPause = PlayPauseState.Empty;
-                this.currSCut = CutState.Empty;
+                currSPlayPause = PlayPauseState.Empty;
+                currSCut = CutState.Empty;
+                currSVolume = VolumeState.Empty;
                 break;
             case "ILoveYou":
-                this.currSPlayPause = PlayPauseState.Empty;
-                this.currSCut = CutState.Empty;
+                currSPlayPause = PlayPauseState.Empty;
+                currSCut = CutState.Empty;
+                currSVolume = VolumeState.Empty;
                 break;
         }
     }
 
-    closedPoints(point1: any, point2: any) {
+    const closedPoints = (point1: any, point2: any) => {
         var a = point1.x - point2.x;
         var b = point1.y - point2.y;
         var c = Math.sqrt(a * a + b * b);
@@ -254,16 +412,146 @@ export class GestureController extends React.Component {
         return false;
     }
 
-    isReady() {
-        return this.gestureRecognizer != undefined;
+    const handleDrums = (handedness : string, landmarks: any) => {
+        
+        //DRUMS detect and managing
+        if(handedness == "Left") {
+
+            //Audio to put in async to play them without overriding everything (?)
+
+            //Index finger action
+            if(closedPoints(landmarks[8], landmarks[4])) {
+
+                if(currSIndex == IndexState.Listening) {
+                    // Play the audio in the background
+                    audioManager.playSound('bassdrum');
+
+                    currSIndex = IndexState.Stopping;
+                }
+                
+            }
+            else {
+                currSIndex = IndexState.Listening;
+            }
+
+            //Middle finger action
+            if(closedPoints(landmarks[12], landmarks[4])) {
+                
+                if(currSMiddle == MiddleState.Listening) {
+                    // Play the audio in the background
+                    audioManager.playSound('snare');
+
+                    currSMiddle = MiddleState.Stopping;
+                }
+            }
+            else {
+                currSMiddle = MiddleState.Listening;
+            }
+
+            //Ring finger action
+            if (closedPoints(landmarks[16], landmarks[4])) {
+
+                if(currSRing == RingState.Listening) {
+                    // Play the audio in the background
+                    audioManager.playSound('electribe');
+
+                    currSRing = RingState.Stopping;
+                }
+                
+            }
+            else {
+                currSRing = RingState.Listening;
+            }
+
+            //Pinky Finger action
+            if (closedPoints(landmarks[20], landmarks[4])) {
+
+                if(currSPincky == PickyState.Listening) {
+                    // Play sounds
+                    audioManager.playSound('clap');
+
+                    currSPincky = PickyState.Stopping;
+                }
+                
+            }
+            else {
+                currSPincky = PickyState.Listening;
+            }
+
+        }
     }
 
-    render() {
-        return (
+    const handlePlayPause = () => {
+        console.warn(waveform);
+        
+        if (currSPlayPause == PlayPauseState.Completed && waveform) {
+
+            console.warn("handlePlayPause");
+            
+
+            waveform.playPause();
+            currSPlayPause = PlayPauseState.Empty;
+        }
+        else {
+            console.warn(currSPlayPause);
+        }
+    }
+
+    const handleRegions = () => {
+
+        if (currSCut == CutState.ClosedCutLeft && loopRegion == undefined && waveform) {
+            loopRegion = {
+                start: waveform.getCurrentTime(),
+                color: "#00bcd447",
+                content: 'Start Loop',
+                loop: false,
+                drag: false,
+                resize: false,
+            };
+            wsRegions.addRegion(loopRegion);
+        }
+
+        if (currSCut == CutState.ClosedCutRight && waveform) {
+            loopRegion.end = waveform.getCurrentTime();
+            loopRegion.loop = true;
+        }
+
+        if (currSCut == CutState.CuttedCompleted && waveform) {
+            wsRegions.clearRegions();
+            wsRegions.addRegion(loopRegion);
+            currSCut = CutState.Empty;
+        }
+    }
+
+    const handleVolume = (landmarks : any) => {
+
+        if(currSVolume == VolumeState.Started) {
+            //volume = landmarks[8].y;
+
+            setVolume(landmarks[8].y);
+
+            console.warn(volume*100);
+        }
+    }
+
+    // Add other functions and hooks as needed
+
+    return (
+        <>
             <div>
                 <p id='gesture_output'></p>
-                <canvas className="output_canvas" id="output_canvas" width="1280" height="720" style={{ margin: "0 auto", border: "1px solid #000000", width: "auto", height: "100%" }}></canvas>
+                <IconsUI x={thumbCoordinates.x} y={thumbCoordinates.y}></IconsUI>
+                <IconsUI x={indexCoordinates.x} y={indexCoordinates.y}></IconsUI>
+                <IconsUI x={middleCoordinates.x} y={middleCoordinates.y}></IconsUI>
+                <IconsUI x={ringCoordinates.x} y={ringCoordinates.y}></IconsUI>
+                <IconsUI x={pinkyCoordinates.x} y={pinkyCoordinates.y}></IconsUI>
+                <canvas className="output_canvas" id="output_canvas" width="1280" height="720" style={{ margin: "0 auto", border: "1px solid #000000", width: "auto", height: "100%" }}>  
+                </canvas>
             </div>
-        );
-    }
-}
+            <p style={{fontSize: "50px"}}>{volume}</p>
+            
+        </>
+    );
+};
+
+export default GestureController;
