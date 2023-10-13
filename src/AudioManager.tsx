@@ -1,17 +1,15 @@
-import AudioScheduler from "./AudioScheduler";
+//import AudioScheduler from "./AudioScheduler";
 
 //Make it a function calss?
 export class AudioManager {
 
     private audioContext: AudioContext | null; 
     private audioBufferMap: Map<string, AudioBuffer>;  //With each sound
-    private audioScheduler : AudioScheduler;
     private isPlaying : boolean = false;
 
     constructor(audioContext: AudioContext | null = null) {
       this.audioContext = audioContext;
       this.audioBufferMap = new Map();
-      this.audioScheduler = new AudioScheduler(this);
     }
   
     // Initialize the AudioContext
@@ -64,7 +62,7 @@ export class AudioManager {
       console.warn("Entratooosfodof");
       
       if(this.isPlaying) {
-        this.stopAllSounds();
+        this.audioBufferMap.get("mainMusic");
         this.isPlaying = false;
       }
       else {
@@ -80,16 +78,31 @@ export class AudioManager {
 
       console.log("Nel loop");
 
-      this.audioScheduler.startLoop(this.audioContext, this.audioBufferMap)
+      //this.audioScheduler.startLoop(this.audioContext, this.audioBufferMap)
 
     }
-  
-    // Stop all currently playing sounds
-    stopAllSounds(): void {
-      if (this.audioContext) {
-        this.audioContext.close();
-        this.audioContext = null;
+
+    /*
+    setVolume(name : string, volume : number) : void {
+
+      
+      if (this.audioContext && this.audioBufferMap.has(name)) {
+
+        console.warn(this.audioContext);
+        
+
+        const source = this.audioContext.createBufferSource();
+
+        console.warn(source);
+        
+
+        source.buffer = this.audioBufferMap.get(name)!;
+        source.connect(this.audioContext.destination);
+        
       }
+
     }
+    */
+  
   }
   

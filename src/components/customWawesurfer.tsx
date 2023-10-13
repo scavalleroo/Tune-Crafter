@@ -15,8 +15,8 @@ const Waveform = React.forwardRef<WaveSurfer | null, WaveformProps>(
       const wavesurfer = WaveSurfer.create({
         container: '#waveform',
         backend: 'WebAudio',
-        waveColor: 'violet',
-        progressColor: 'purple',
+        waveColor: '#A011A7', 
+        progressColor: '#9D11A6',
       });
 
       wavesurfer.load(audioUrl);

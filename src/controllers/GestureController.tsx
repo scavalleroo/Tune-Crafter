@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import RegionsPlugin from 'wavesurfer.js/src/plugin/regions';
 import './GestureController.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import { GestureRecognizer, FilesetResolver, DrawingUtils } from '../../node_modules/@mediapipe/tasks-vision';
 import { AudioManager } from "../AudioManager";
-import IconsUI from "../IconsUI";
+//import IconsUI from "../IconsUI";
 import VolumeProgressBar from "../components/volumeProgressBar";
 import WaveSurfer from "wavesurfer.js";
 
@@ -51,9 +51,7 @@ enum PickyState {
 
 enum VolumeState {
     Empty = "empty",
-    Started = "startedManagingVolume",
-    Increasing = "increasing",
-    Decreasing = "decreasing"
+    Started = "startedManagingVolume"
 }
 
 interface GestureControllerProps {
@@ -65,23 +63,9 @@ const GestureController = (props: GestureControllerProps) => {
     const video = props.video;
     const waveform = props.waveform;
     var gestureRecognizer : GestureRecognizer | null = null;
-    var gestureOutput : any | null = null;
+    //var gestureOutput : any | null = null;
     var canvasElement : any | null = null;
     var canvasCtx : any | null = null;
-    //var [gestureRecognizer, setGestureRecognizer] = useState<GestureRecognizer | null>(null);
-    //var [gestureOutput, setGestureOutput] = useState<any>(null);
-    //var [canvasElement, canvasElement] = useState<any>(null);
-    //var [canvasCtx, setCanvasCtx] = useState<any>(null);
-
-    /*
-    const [currSPlayPause, setCurrSPlayPause] = useState<PlayPauseState>(PlayPauseState.Empty);
-    const [currSCut, setCurrSCut] = useState<CutState>(CutState.Empty);
-    const [currSIndex, setCurrSIndex] = useState<IndexState>(IndexState.Listening);
-    const [currSMiddle, setCurrSMiddle] = useState<MiddleState>(MiddleState.Listening);
-    const [currSRing, setCurrSRing] = useState<RingState>(RingState.Listening);
-    const [currSPincky, setCurrSPincky] = useState<PickyState>(PickyState.Listening);
-    const [currSVolume, setCurrSVolume] = useState<VolumeState>(VolumeState.Empty);
-    */
 
     var currSPlayPause: PlayPauseState = PlayPauseState.Empty;
     var currSCut: CutState = CutState.Empty;
@@ -96,16 +80,17 @@ const GestureController = (props: GestureControllerProps) => {
     var canvasCtx: any = undefined;
     var wsRegions: any = undefined;
 
-    //var [results, setResults] = useState<any>(undefined);
     var results : any | null = null;
-    //const [loopRegion, setLoopRegion] = useState<any>(undefined);
-    //const [wsRegions, setWsRegions] = useState<any>(undefined);
 
     const videoHeight = "100vh";
     const videoWidth = "auto";
-    //const waveform = useRef<any>(null);
+
+    var volumeTimer : any = null;
+
     const audioManager = new AudioManager();
+    
     const [volume, setVolume] = useState<number>(50);
+    const [isVolumeVisible, setIsVolumeVisible] = useState<boolean>(false);
 
     var lastVideoTime : any = -1;
 
@@ -130,41 +115,25 @@ const GestureController = (props: GestureControllerProps) => {
         y: 500
     };
 
+    //Excecuted every time the video or the waveForm change
     useEffect(() => {
 
-        console.warn("FIRST useEffect");
-        console.warn(video);
-        console.warn(waveform);
+        if (video && waveform) {    
+            createGestureRecognizer().then(() => {
+                video?.addEventListener("loadeddata", predictWebcam);
+                window.requestAnimationFrame(predictWebcam.bind(this));
+            });
 
-        if (video && waveform) {
+            setAudioObjects();
 
-            console.warn("ARRIVATIIIIII");
-
-            console.warn(video);
+            console.warn("ECCOCIIIII");
+            console.warn(waveform.backend);
             console.warn(waveform);
-    
-            if(video) {
-                createGestureRecognizer().then(() => {
-                    video?.addEventListener("loadeddata", predictWebcam);
-                    window.requestAnimationFrame(predictWebcam.bind(this));
-                  });
-            }
+            
+            // Handle Effects
         }
         
     }, [video, waveform]);
-
-    useEffect(() => {
-
-        console.warn("second useEffect");
-        console.warn(video);
-        console.warn(waveform);
-
-        if (waveform) {
-            console.warn(waveform);
-            // Handle Effects
-        }
-        setAudioObjects();
-    }, [waveform]);
 
     // Add other useEffect hooks as needed
 
@@ -219,17 +188,9 @@ const GestureController = (props: GestureControllerProps) => {
             performAction();
             window.requestAnimationFrame(predictWebcam.bind(this));
         }
-        else {
-            console.warn("POOOOOOOOOOOOOH");
-            console.warn(gestureRecognizer);
-        }
     };
 
     const setAudioObjects = () => {
-
-
-        console.warn("QUA ENTRA PER FORA ZIO CONAGLIA");
-        
 
         /*
         this.audioBassdrum.preload = 'auto';
@@ -244,22 +205,22 @@ const GestureController = (props: GestureControllerProps) => {
         */
 
         // Load audio files
-        //this.audioManager.loadSound('mainMusic', 'assets/audio.mp3')
-        audioManager.loadSound('bassdrum', 'assets/bassdrum.mp3');
-        audioManager.loadSound('snare', 'assets/dubstep-snare-drum.mp3');
-        audioManager.loadSound('electribe', 'assets/electribe-hats.mp3');
-        audioManager.loadSound('clap', 'assets/mega-clap.mp3');
+        audioManager.loadSound('mainMusic', 'assets/sounds/audio.mp3')
+        audioManager.loadSound('bassdrum', 'assets/sounds/bassdrum.mp3');
+        audioManager.loadSound('snare', 'assets/sounds/dubstep-snare-drum.mp3');
+        audioManager.loadSound('electribe', 'assets/sounds/electribe-hats.mp3');
+        audioManager.loadSound('clap', 'assets/sounds/mega-clap.mp3');
         
     }
 
     const setupCanvas = () => {
-        if (gestureOutput == undefined || canvasElement == undefined || canvasCtx == undefined) {
-            gestureOutput = document.getElementById("gesture_output") as HTMLOutputElement;
+        if (canvasCtx == undefined) {  //gestureOutput == undefined || 
+            //gestureOutput = document.getElementById("gesture_output") as HTMLOutputElement;
             canvasElement = document.getElementById("output_canvas") as HTMLCanvasElement;
             canvasCtx = canvasElement.getContext("2d");
             canvasElement.style.height = videoHeight;
             canvasElement.style.width = videoWidth;
-            gestureOutput.style.width = videoWidth;
+            //gestureOutput.style.width = videoWidth;
         }
 
         canvasCtx.save();
@@ -289,9 +250,6 @@ const GestureController = (props: GestureControllerProps) => {
 
     const performAction = () => {
 
-        console.warn("performAction");
-        
-
         //In modalità doppia mano non ferma la musica
 
         for (let i = 0; i < results.gestures.length; i++) {
@@ -301,7 +259,7 @@ const GestureController = (props: GestureControllerProps) => {
             ).toFixed(2);
             const handedness = results.handednesses[i][0].displayName;
 
-            gestureOutput.innerText = "Cut State " + currSCut;
+            //gestureOutput.innerText = "Cut State " + currSCut;
 
             detectAction(categoryName, categoryScore, handedness, results.landmarks[i]);
             handleDrums(handedness, results.landmarks[i]);
@@ -312,8 +270,7 @@ const GestureController = (props: GestureControllerProps) => {
     }
 
     const detectAction = (categoryName: string, categoryScore: any, handedness: string, landmarks: any) => {
-        console.warn(categoryName);
-        console.warn(categoryScore);
+        console.log(categoryScore);
         switch (categoryName) {
             case "None":
                 if (currSCut == CutState.StartCuttingLeft && handedness == "Left" && closedPoints(landmarks[6], landmarks[10]) && closedPoints(landmarks[7], landmarks[11]) && closedPoints(landmarks[8], landmarks[12])) {
@@ -332,6 +289,10 @@ const GestureController = (props: GestureControllerProps) => {
             case "Pointing_Up":
                 currSPlayPause = PlayPauseState.Empty;
                 currSCut = CutState.Empty;
+                currSIndex = IndexState.Stopping;
+                currSMiddle = MiddleState.Stopping;
+                currSRing = RingState.Stopping;
+                currSPincky = PickyState.Stopping;
                 if(handedness == "Right") {
                     currSVolume = VolumeState.Started;
                 }
@@ -342,6 +303,10 @@ const GestureController = (props: GestureControllerProps) => {
                 }
                 currSCut = CutState.Empty;
                 currSVolume = VolumeState.Empty;
+                currSIndex = IndexState.Stopping;
+                currSMiddle = MiddleState.Stopping;
+                currSRing = RingState.Stopping;
+                currSPincky = PickyState.Stopping;
                 break;
             case "Closed_Fist":
                 if (handedness == "Right") {
@@ -353,10 +318,18 @@ const GestureController = (props: GestureControllerProps) => {
                 }
                 currSCut = CutState.Empty;
                 currSVolume = VolumeState.Empty;
+                currSIndex = IndexState.Stopping;
+                currSMiddle = MiddleState.Stopping;
+                currSRing = RingState.Stopping;
+                currSPincky = PickyState.Stopping;
                 break;
             case "Victory":
                 currSPlayPause = PlayPauseState.Empty;
                 currSVolume = VolumeState.Empty;
+                currSIndex = IndexState.Stopping;
+                currSMiddle = MiddleState.Stopping;
+                currSRing = RingState.Stopping;
+                currSPincky = PickyState.Stopping;
                 switch (currSCut) {
                     case CutState.Empty:
                         if (handedness == "Left") {
@@ -400,16 +373,6 @@ const GestureController = (props: GestureControllerProps) => {
                 currSVolume = VolumeState.Empty;
                 break;
         }
-    }
-
-    const closedPoints = (point1: any, point2: any) => {
-        var a = point1.x - point2.x;
-        var b = point1.y - point2.y;
-        var c = Math.sqrt(a * a + b * b);
-        if (c < 0.1) {
-            return true;
-        }
-        return false;
     }
 
     const handleDrums = (handedness : string, landmarks: any) => {
@@ -482,18 +445,10 @@ const GestureController = (props: GestureControllerProps) => {
     }
 
     const handlePlayPause = () => {
-        console.warn(waveform);
-        
         if (currSPlayPause == PlayPauseState.Completed && waveform) {
-
-            console.warn("handlePlayPause");
-            
 
             waveform.playPause();
             currSPlayPause = PlayPauseState.Empty;
-        }
-        else {
-            console.warn(currSPlayPause);
         }
     }
 
@@ -526,32 +481,57 @@ const GestureController = (props: GestureControllerProps) => {
     const handleVolume = (landmarks : any) => {
 
         if(currSVolume == VolumeState.Started) {
-            //volume = landmarks[8].y;
+            
+            let currentVolume : number = 1-landmarks[8].x;
 
-            setVolume(landmarks[8].y);
+            setVolume(parseFloat((currentVolume*100).toFixed(0)));
+            setIsVolumeVisible(true);
 
-            console.warn(volume*100);
+            waveform?.setVolume(currentVolume);
+
+            //To let finish the Timeout only when the the user changes gesture
+            if(volumeTimer != null) {
+                clearTimeout(volumeTimer);
+            }
+            volumeTimer = setTimeout(() => {
+                setIsVolumeVisible(false);
+                volumeTimer = null;
+
+            }, 3000);
+
         }
     }
 
-    // Add other functions and hooks as needed
+    const closedPoints = (point1: any, point2: any) => {
+        var a = point1.x - point2.x;
+        var b = point1.y - point2.y;
+        var c = Math.sqrt(a * a + b * b);
+        if (c < 0.05) {
+            return true;
+        }
+        return false;
+    }
 
     return (
         <>
             <div>
-                <p id='gesture_output'></p>
-                <IconsUI x={thumbCoordinates.x} y={thumbCoordinates.y}></IconsUI>
-                <IconsUI x={indexCoordinates.x} y={indexCoordinates.y}></IconsUI>
-                <IconsUI x={middleCoordinates.x} y={middleCoordinates.y}></IconsUI>
-                <IconsUI x={ringCoordinates.x} y={ringCoordinates.y}></IconsUI>
-                <IconsUI x={pinkyCoordinates.x} y={pinkyCoordinates.y}></IconsUI>
-                <canvas className="output_canvas" id="output_canvas" width="1280" height="720" style={{ margin: "0 auto", border: "1px solid #000000", width: "auto", height: "100%" }}>  
+                <canvas className="output_canvas" id="output_canvas" width="1280" height="720">  
                 </canvas>
             </div>
-            <p style={{fontSize: "50px"}}>{volume}</p>
-            
+            <div className="volumeProgressBar" style={{ display: isVolumeVisible ? "block" : "none"}}>
+                <VolumeProgressBar volume={volume}></VolumeProgressBar>
+            </div>
         </>
     );
 };
 
 export default GestureController;
+
+/**
+ * <p id='gesture_output'></p>
+ *              <IconsUI x={thumbCoordinates.x} y={thumbCoordinates.y}></IconsUI>
+                <IconsUI x={indexCoordinates.x} y={indexCoordinates.y}></IconsUI>
+                <IconsUI x={middleCoordinates.x} y={middleCoordinates.y}></IconsUI>
+                <IconsUI x={ringCoordinates.x} y={ringCoordinates.y}></IconsUI>
+                <IconsUI x={pinkyCoordinates.x} y={pinkyCoordinates.y}></IconsUI>
+ */
