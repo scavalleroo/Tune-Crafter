@@ -1,11 +1,11 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
 import RegionsPlugin from 'wavesurfer.js/src/plugin/regions';
 import './GestureController.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import { GestureRecognizer, FilesetResolver, DrawingUtils } from '../../node_modules/@mediapipe/tasks-vision';
 import { AudioManager } from "../AudioManager";
 import IconsUI from "../IconsUI";
-import VolumeProgressBar from "../components/volumeProgressBar";
+//import VolumeProgressBar from "../components/volumeProgressBar";
 import WaveSurfer from "wavesurfer.js";
 
 export interface Coordinates {
@@ -131,18 +131,7 @@ const GestureController = (props: GestureControllerProps) => {
     };
 
     useEffect(() => {
-
-        console.warn("FIRST useEffect");
-        console.warn(video);
-        console.warn(waveform);
-
         if (video && waveform) {
-
-            console.warn("ARRIVATIIIIII");
-
-            console.warn(video);
-            console.warn(waveform);
-    
             if(video) {
                 createGestureRecognizer().then(() => {
                     video?.addEventListener("loadeddata", predictWebcam);
@@ -154,11 +143,6 @@ const GestureController = (props: GestureControllerProps) => {
     }, [video, waveform]);
 
     useEffect(() => {
-
-        console.warn("second useEffect");
-        console.warn(video);
-        console.warn(waveform);
-
         if (waveform) {
             console.warn(waveform);
             // Handle Effects
@@ -213,38 +197,14 @@ const GestureController = (props: GestureControllerProps) => {
                 lastVideoTime = video!.currentTime;
                 const newResults = gestureRecognizer?.recognizeForVideo(video!, nowInMs);
                 results = newResults;
-                console.log(newResults);
             }
             drawHands();
             performAction();
             window.requestAnimationFrame(predictWebcam.bind(this));
         }
-        else {
-            console.warn("POOOOOOOOOOOOOH");
-            console.warn(gestureRecognizer);
-        }
     };
 
     const setAudioObjects = () => {
-
-
-        console.warn("QUA ENTRA PER FORA ZIO CONAGLIA");
-        
-
-        /*
-        this.audioBassdrum.preload = 'auto';
-        this.audioSnare.preload = 'auto';
-        this.audioElecribe.preload = 'auto';
-        this.audioClap.preload = 'auto'
-
-        this.audioBassdrum.volume = 1.0;
-        this.audioSnare.volume = 1.0;
-        this.audioElecribe.volume = 1.0;
-        this.audioClap.volume = 1.0;
-        */
-
-        // Load audio files
-        //this.audioManager.loadSound('mainMusic', 'assets/audio.mp3')
         audioManager.loadSound('bassdrum', 'assets/bassdrum.mp3');
         audioManager.loadSound('snare', 'assets/dubstep-snare-drum.mp3');
         audioManager.loadSound('electribe', 'assets/electribe-hats.mp3');
@@ -288,12 +248,6 @@ const GestureController = (props: GestureControllerProps) => {
     }
 
     const performAction = () => {
-
-        console.warn("performAction");
-        
-
-        //In modalità doppia mano non ferma la musica
-
         for (let i = 0; i < results.gestures.length; i++) {
             const categoryName = results.gestures[i][0].categoryName;
             const categoryScore = parseFloat(
@@ -482,18 +436,9 @@ const GestureController = (props: GestureControllerProps) => {
     }
 
     const handlePlayPause = () => {
-        console.warn(waveform);
-        
         if (currSPlayPause == PlayPauseState.Completed && waveform) {
-
-            console.warn("handlePlayPause");
-            
-
             waveform.playPause();
             currSPlayPause = PlayPauseState.Empty;
-        }
-        else {
-            console.warn(currSPlayPause);
         }
     }
 

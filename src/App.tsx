@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useLayoutEffect, useState, Ref } from "react";
+import React, { useRef, useEffect, useState, Ref } from "react";
 import { hasGetUserMedia } from './utils/helpers';
 import { HartRateComponent } from './components/hartRateComponent';
 import GestureController from "./controllers/GestureController";
@@ -14,7 +14,7 @@ function App() {
   //var waveForm : WaveSurfer | null = null;
   const waveformRef : Ref<WaveSurfer> | null = useRef<WaveSurfer | null>(null);
   //let controller: any;
-  let audioUrl = 'assets/audio.mp3';
+  let audioUrl = 'assets/audio2.mp3';
 
   //var waveForm : WaveSurfer | null = null;
   //const[waveForm, setWaveForm] = useState<WaveSurfer | null>(null);
