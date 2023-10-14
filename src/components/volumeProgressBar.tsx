@@ -6,12 +6,13 @@ interface VolumeProgressBarProps {
 
 const VolumeProgressBar = ({ volume } : VolumeProgressBarProps) => {
 
-
+    console.warn();
+    
 
     return(
         <>
             <div className="progress">
-                <div className="progress-bar bg-info" id="volume-bar" role="progressbar" style={{ width: `${volume}%` }} aria-valuenow={volume} aria-valuemin={0} aria-valuemax={100}></div>
+                <div className="progress-bar bg-info" id="volume-bar" role="progressbar" style={{width: `${volume}%`}} aria-valuenow={volume} aria-valuemin={0} aria-valuemax={100}>{volume}</div>
             </div>
         </>
     )

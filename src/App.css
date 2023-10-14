@@ -9,6 +9,33 @@ video {
   height: 280px;
 }
 
+body, html {
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* Prevent scrolling */
+  height: 100%;
+  width: 100%;
+  background-image: url("/public/assets/images/backgroundTuneCrafter.jpg");
+}
+
+.main-cont {
+  height: 100vh; /* 100% of the viewport height */
+  width: 100vw; /* 100% of the viewport width */
+}
+
+.waveForm {
+  width: 80%;
+  margin: 0 auto;
+}
+
+.volumeProgressBar {
+  position: absolute;
+  bottom: 30px;
+  width: 80%;
+  margin-left: 10%;
+  margin-right: 10%;
+}
+
 .removed {
   display: none;
 }
@@ -52,6 +79,9 @@ video {
 }
 
 .output_canvas {
+  margin: 0 auto;
+  width: 100% !important;
+  height: 100%;
   transform: rotateY(180deg);
   -webkit-transform: rotateY(180deg);
   -moz-transform: rotateY(180deg);
