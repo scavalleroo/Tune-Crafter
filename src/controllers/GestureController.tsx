@@ -67,15 +67,12 @@ interface GestureControllerProps {
 const GestureController = (props: GestureControllerProps) => {
 
     // Define a sensitivity value to control effect change speed
-    const sensitivity = 5; // You can adjust this value
-
     var video = props.video;
     var waveform = props.waveform;
     var gestureRecognizer : GestureRecognizer | null = null;
     //var gestureOutput : any | null = null;
     var canvasElement : any | null = null;
     var canvasCtx : any | null = null;
-
     
     var currSPlayPause: PlayPauseState = PlayPauseState.Empty;
     var currSCut: CutState = CutState.Empty;
@@ -98,15 +95,12 @@ const GestureController = (props: GestureControllerProps) => {
 
     var volumeTimer : any = null;
 
-    const audioManager = new AudioManager();
+    const soundManager = new AudioManager();
+    var effectManager: AudioManager;
     
     const [volume, setVolume] = useState<number>(50);
     const [isVolumeVisible, setIsVolumeVisible] = useState<boolean>(false);
-    //const [effectValue, setEffectValue] = useState<number>(0);
     var effectValue : number = 0;
-
-    var prevThumbUpCoordinates : Coordinates | null = null;
-    var currentThumbUpCoordinates : Coordinates | null = null;
 
     var thumbCoordinates: Coordinates = {
         x: 100,
@@ -131,23 +125,24 @@ const GestureController = (props: GestureControllerProps) => {
 
     var lastVideoTime : any = -1;
 
+    //First functions that has to be excecuted just at the first render
+    useEffect(() => {
+        setAudioObjects();
+    }, [])
 
     //Excecuted every time the video or the waveForm change
     useEffect(() => {
-
         if (video && waveform) {    
             createGestureRecognizer().then(() => {
                 video?.addEventListener("loadeddata", predictWebcam);
                 window.requestAnimationFrame(predictWebcam.bind(this));
             });
-
-            setAudioObjects();
-
-            console.warn("ECCOCIIIII");
-            console.warn(waveform.backend);
-            console.warn(waveform);
             
             // Handle Effects
+            console.warn("ECCOCIIIII");
+            //console.warn(waveform.backend);
+            console.warn(waveform);
+            effectManager = new AudioManager(waveform.backend.getAudioContext());
         }
         
     }, [video, waveform]);
@@ -222,11 +217,11 @@ const GestureController = (props: GestureControllerProps) => {
         */
 
         // Load audio files
-        audioManager.loadSound('mainMusic', 'assets/sounds/audio.mp3')
-        audioManager.loadSound('bassdrum', 'assets/sounds/bassdrum.mp3');
-        audioManager.loadSound('snare', 'assets/sounds/dubstep-snare-drum.mp3');
-        audioManager.loadSound('electribe', 'assets/sounds/electribe-hats.mp3');
-        audioManager.loadSound('clap', 'assets/sounds/mega-clap.mp3');
+        soundManager.loadSound('mainMusic', 'assets/sounds/audio.mp3')
+        soundManager.loadSound('bassdrum', 'assets/sounds/bassdrum.mp3');
+        soundManager.loadSound('snare', 'assets/sounds/dubstep-snare-drum.mp3');
+        soundManager.loadSound('electribe', 'assets/sounds/electribe-hats.mp3');
+        soundManager.loadSound('clap', 'assets/sounds/mega-clap.mp3');
         
     }
 
@@ -427,7 +422,7 @@ const GestureController = (props: GestureControllerProps) => {
 
                 if(currSIndex == IndexState.Listening) {
                     // Play the audio in the background
-                    audioManager.playSound('bassdrum');
+                    soundManager.playSound('bassdrum');
 
                     currSIndex = IndexState.Stopping;
                 }
@@ -442,7 +437,7 @@ const GestureController = (props: GestureControllerProps) => {
                 
                 if(currSMiddle == MiddleState.Listening) {
                     // Play the audio in the background
-                    audioManager.playSound('snare');
+                    soundManager.playSound('snare');
 
                     currSMiddle = MiddleState.Stopping;
                 }
@@ -456,7 +451,7 @@ const GestureController = (props: GestureControllerProps) => {
 
                 if(currSRing == RingState.Listening) {
                     // Play the audio in the background
-                    audioManager.playSound('electribe');
+                    soundManager.playSound('electribe');
 
                     currSRing = RingState.Stopping;
                 }
@@ -471,7 +466,7 @@ const GestureController = (props: GestureControllerProps) => {
 
                 if(currSPincky == PickyState.Listening) {
                     // Play sounds
-                    audioManager.playSound('clap');
+                    soundManager.playSound('clap');
 
                     currSPincky = PickyState.Stopping;
                 }
@@ -488,6 +483,7 @@ const GestureController = (props: GestureControllerProps) => {
         if (currSPlayPause == PlayPauseState.Completed && waveform) {
 
             waveform.playPause();
+            //effectManager.play();
             currSPlayPause = PlayPauseState.Empty;
         }
     }
@@ -498,20 +494,17 @@ const GestureController = (props: GestureControllerProps) => {
 
             //Manage effects
 
-            currentThumbUpCoordinates = {x:landmarks[4].x, y: landmarks[4].y};
-
-            if(prevThumbUpCoordinates == null) {
-                prevThumbUpCoordinates = {x:landmarks[4].x, y: landmarks[4].y};
-            }
+            var currentThumbUpCoordinates = {x:landmarks[4].x, y: landmarks[4].y};
+            var referencePoint = {x:landmarks[0].x, y: landmarks[0].y}
           
-            updateEffectsValue();
+            updateEffectsValue(currentThumbUpCoordinates!, referencePoint!);
 
             console.warn("EFFECTIVE VALUE: " + effectValue);
             
         }
         else if(handedness == "Right") {
-            prevThumbUpCoordinates = null;
             effectValue = 0;
+
         }
 
     }
@@ -569,59 +562,26 @@ const GestureController = (props: GestureControllerProps) => {
     /**
      * Function to update the effect factor based on the angle taken by the Thumb_Up gesture
      */
-    const updateEffectsValue = () => {
-
-        console.warn("prev =" + prevThumbUpCoordinates?.x + "  " + prevThumbUpCoordinates?.y);
-        console.warn("current =" + currentThumbUpCoordinates?.x + "  " + currentThumbUpCoordinates?.y);
-
+    const updateEffectsValue = (point1: Coordinates, point2: Coordinates) => {
         var angle : number = 0;
 
-        if(currentThumbUpCoordinates?.x != prevThumbUpCoordinates?.x && currentThumbUpCoordinates?.y != prevThumbUpCoordinates?.y) {
+        angle = calculateAngle(point1, point2);
 
-            //Angle between the 
-            angle = calculateAngle(currentThumbUpCoordinates!, prevThumbUpCoordinates!);
-            //const angleChange = angle - calculateAngle(prevThumbUpCoordinates!, currentThumbUpCoordinates!);
-
-        }
-
-        console.warn("angle =" + Math.abs(angle));
-        
-        //ChatGPT help -> prompt: update a variable base on turning coordinates clockwise and counterclockwise 
-        if (Math.abs(angle) > 1) {
-            if (angle > 0) {
-                // Rotate clockwise - Increase volume
-                var newEffectValue: number = effectValue + sensitivity;
-                //setEffectValue(Math.min(100, newEffectValue)); // Ensure volume doesn't exceed 100
-                effectValue += Math.min(50, newEffectValue) // Ensure volume doesn't exceed 50
-            } else {
-                // Rotate counterclockwise - Decrease volume
-                var newEffectValue: number = effectValue - sensitivity;
-                //setEffectValue(Math.min(0, newEffectValue)); // Ensure volume doesn't exceed 0
-                effectValue += Math.max(-50, newEffectValue) // Ensure volume doesn't exceed -50
-            }
-        }
-    
-        prevThumbUpCoordinates = {x: currentThumbUpCoordinates!.x, y: currentThumbUpCoordinates!.y};
+        effectValue = angle;
 
         console.warn("EFFECTIVE VALUE: " + effectValue);
         
     };
 
     const calculateAngle = (coord1: Coordinates, coord2: Coordinates) => {
-        //const dx = coord2.x - coord1.x;
-        //const dy = coord2.y - coord1.y;
+        const dx = coord2.x - coord1.x;
+        const dy = coord2.y - coord1.y;
 
-        //return Math.atan2(dy, dx);
-        const angleCurrentPoint = Math.PI / 2 - Math.atan2(coord1.x, coord1.y);
-        const anglePreviousPoint = Math.PI / 2 - Math.atan2(coord2.x, coord2.y);
+        const angle = Math.atan2(dy, dx);
 
-        console.warn("angleCurrentPoint " + angleCurrentPoint);
-        console.warn("anglePreviousPoint " + anglePreviousPoint);
+        const angleDegree = (angle * 180) / Math.PI
 
-        var diff = angleCurrentPoint - anglePreviousPoint;
-        
-        // Convert the angle to degrees (if needed)
-        return (diff * 180) / Math.PI;
+        return angleDegree;
     };
 
     const closedPoints = (point1: any, point2: any) => {

@@ -44,7 +44,7 @@ export class AudioManager {
     }
   
     // Play a loaded sound
-    playSound(name: string): void {
+    public playSound(name: string): void {
       if (!this.audioContext) {
         this.initializeAudioContext();
       }
@@ -72,37 +72,23 @@ export class AudioManager {
 
     }
 
-    startSoundsLoop() : void {
+    public setEffect() {
+      // panning
+      /*
+      const pannerOptions = {pan: 0};
+      const panner = new StereoPannerNode(audioCtx, pannerOptions);
 
-      //Start looping over a sound with a specific bpm
+      const pannerControl = document.querySelector('[data-action="panner"]');
+      pannerControl.addEventListener('input', function() {
+        panner.pan.value = this.value;	
+      }, false);
 
-      console.log("Nel loop");
-
-      //this.audioScheduler.startLoop(this.audioContext, this.audioBufferMap)
-
+      // connect our graph
+      track.connect(gainNode).connect(panner).connect(audioCtx.destination);
+      */
     }
 
-    /*
-    setVolume(name : string, volume : number) : void {
 
-      
-      if (this.audioContext && this.audioBufferMap.has(name)) {
-
-        console.warn(this.audioContext);
-        
-
-        const source = this.audioContext.createBufferSource();
-
-        console.warn(source);
-        
-
-        source.buffer = this.audioBufferMap.get(name)!;
-        source.connect(this.audioContext.destination);
-        
-      }
-
-    }
-    */
   
   }
   

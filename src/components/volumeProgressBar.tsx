@@ -6,9 +6,6 @@ interface VolumeProgressBarProps {
 
 const VolumeProgressBar = ({ volume } : VolumeProgressBarProps) => {
 
-    console.warn();
-    
-
     return(
         <>
             <div className="progress">
