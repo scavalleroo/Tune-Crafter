@@ -105,17 +105,16 @@ html {
 .hb-text {
   position: absolute;
   text-align: center;
-  padding: 10px;
+  padding: 5px;
   color: black;
-  bottom: 10px;
+  bottom: 40px;
   position: absolute;
   left: 50%;
   /* position the left edge of the element at the middle of the parent */
   transform: translate(-50%, -50%);
   background: white;
-  font-weight: bold;
-  font-size: 20px;
-  border-radius: 20px;
+  font-size: 14px;
+  border-radius: 10px;
 }
 
 .currGesture {
@@ -138,4 +137,20 @@ html {
   position: absolute;
   top: 210px;
   margin-top: 40px;
+}
+
+.ebony {
+  color: #0B060E;
+}
+
+.violet {
+  color: #B01EB0;
+}
+
+.loulou {
+  color: #5A0955;
+}
+
+.purple {
+  color: #7A0B85;
 }

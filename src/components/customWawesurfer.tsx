@@ -16,9 +16,9 @@ const Waveform = React.forwardRef<WaveSurfer | null, WaveformProps>(
         container: '#waveform',
         backend: 'WebAudio',
         // waveColor: '#A011A7',
-        waveColor: '#f23ff8',
-        progressColor: '#0858d3',
-        cursorColor: '#7d7d7d',
+        waveColor: '#B01EB0',
+        progressColor: '#0B060E',
+        cursorColor: '#F5F5F5',
         cursorWidth: 3,
       });
 
@@ -46,7 +46,7 @@ const Waveform = React.forwardRef<WaveSurfer | null, WaveformProps>(
     return (
       <div>
         <div id="waveform" 
-        style={{ marginTop: '10px', background: 'white', padding: "10px", borderRadius: '20px' }}></div>
+        style={{ marginTop: '10px', background: '#f5f5f51f', padding: "10px", borderRadius: '20px' }}></div>
       </div>
     );
   }

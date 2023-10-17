@@ -28,7 +28,7 @@ export class HartRateComponent extends React.Component<any, any> {
     onConnect() {
         socket.emit("connect_web_client");
         console.log("Connected: " + socket.id);
-        document.getElementById('harthRate')!.innerHTML = "Connected to webserver. Waiting for hart rate...";
+        document.getElementById('harthRate')!.innerHTML = "Connected to webserver ✅. Waiting for hart rate... ⌚️";
     }
 
     onDisconnect() {
@@ -56,7 +56,7 @@ export class HartRateComponent extends React.Component<any, any> {
 
     Bubble({ id, onAnimationEnd }: any) {
         const opacityDuration: number = 1;
-        const [position, setPosition] = useState({ x: window.innerWidth / 2, y: window.innerHeight - 100 });
+        const [position, setPosition] = useState({ x: window.innerWidth / 2, y: window.innerHeight - 140 });
         const [opacity, setOpacity] = useState(0.5);
         const size = useRef(random(0.2, 0.9));
         const emojis = ["❤️", "😍", "👏", "🔥"];
