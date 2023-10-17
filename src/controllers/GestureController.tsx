@@ -54,19 +54,29 @@ enum VolumeState {
     Started = "startedManagingVolume"
 }
 
+enum EffectsState {
+    Empty = "empty",
+    StartPuttingEffects = "startPuttingEffects",
+}
+
 interface GestureControllerProps {
     video: HTMLVideoElement | null,
     waveform : WaveSurfer | null
 }
 
 const GestureController = (props: GestureControllerProps) => {
-    const video = props.video;
-    const waveform = props.waveform;
+
+    // Define a sensitivity value to control effect change speed
+    const sensitivity = 5; // You can adjust this value
+
+    var video = props.video;
+    var waveform = props.waveform;
     var gestureRecognizer : GestureRecognizer | null = null;
     //var gestureOutput : any | null = null;
     var canvasElement : any | null = null;
     var canvasCtx : any | null = null;
 
+    
     var currSPlayPause: PlayPauseState = PlayPauseState.Empty;
     var currSCut: CutState = CutState.Empty;
     var currSIndex: IndexState = IndexState.Listening;
@@ -74,6 +84,7 @@ const GestureController = (props: GestureControllerProps) => {
     var currSRing: RingState = RingState.Listening;
     var currSPincky: PickyState = PickyState.Listening;
     var currSVolume: VolumeState = VolumeState.Empty;
+    var currSEffects: EffectsState = EffectsState.Empty;
 
     var results: any = undefined;
     var loopRegion: any = undefined;
@@ -91,8 +102,11 @@ const GestureController = (props: GestureControllerProps) => {
     
     const [volume, setVolume] = useState<number>(50);
     const [isVolumeVisible, setIsVolumeVisible] = useState<boolean>(false);
+    //const [effectValue, setEffectValue] = useState<number>(0);
+    var effectValue : number = 0;
 
-    var lastVideoTime : any = -1;
+    var prevThumbUpCoordinates : Coordinates | null = null;
+    var currentThumbUpCoordinates : Coordinates | null = null;
 
     var thumbCoordinates: Coordinates = {
         x: 100,
@@ -114,6 +128,9 @@ const GestureController = (props: GestureControllerProps) => {
         x: 500,
         y: 500
     };
+
+    var lastVideoTime : any = -1;
+
 
     //Excecuted every time the video or the waveForm change
     useEffect(() => {
@@ -264,13 +281,14 @@ const GestureController = (props: GestureControllerProps) => {
             detectAction(categoryName, categoryScore, handedness, results.landmarks[i]);
             handleDrums(handedness, results.landmarks[i]);
             handlePlayPause();
+            handleEffects(handedness, results.landmarks[i]);
             handleRegions();
             handleVolume(results.landmarks[i]);
         }
     }
 
     const detectAction = (categoryName: string, categoryScore: any, handedness: string, landmarks: any) => {
-        console.log(categoryScore);
+        console.warn(categoryName);
         switch (categoryName) {
             case "None":
                 if (currSCut == CutState.StartCuttingLeft && handedness == "Left" && closedPoints(landmarks[6], landmarks[10]) && closedPoints(landmarks[7], landmarks[11]) && closedPoints(landmarks[8], landmarks[12])) {
@@ -282,6 +300,7 @@ const GestureController = (props: GestureControllerProps) => {
                 }
 
                 currSVolume = VolumeState.Empty;
+                currSEffects = EffectsState.Empty;
 
                 //handleDrums(handedness, landmarks);
 
@@ -293,6 +312,7 @@ const GestureController = (props: GestureControllerProps) => {
                 currSMiddle = MiddleState.Stopping;
                 currSRing = RingState.Stopping;
                 currSPincky = PickyState.Stopping;
+                currSEffects = EffectsState.Empty;
                 if(handedness == "Right") {
                     currSVolume = VolumeState.Started;
                 }
@@ -307,6 +327,7 @@ const GestureController = (props: GestureControllerProps) => {
                 currSMiddle = MiddleState.Stopping;
                 currSRing = RingState.Stopping;
                 currSPincky = PickyState.Stopping;
+                currSEffects = EffectsState.Empty;
                 break;
             case "Closed_Fist":
                 if (handedness == "Right") {
@@ -322,6 +343,7 @@ const GestureController = (props: GestureControllerProps) => {
                 currSMiddle = MiddleState.Stopping;
                 currSRing = RingState.Stopping;
                 currSPincky = PickyState.Stopping;
+                currSEffects = EffectsState.Empty;
                 break;
             case "Victory":
                 currSPlayPause = PlayPauseState.Empty;
@@ -330,6 +352,7 @@ const GestureController = (props: GestureControllerProps) => {
                 currSMiddle = MiddleState.Stopping;
                 currSRing = RingState.Stopping;
                 currSPincky = PickyState.Stopping;
+                currSEffects = EffectsState.Empty;
                 switch (currSCut) {
                     case CutState.Empty:
                         if (handedness == "Left") {
@@ -357,20 +380,37 @@ const GestureController = (props: GestureControllerProps) => {
                         break;
                 }
                 break;
-            case "Thumbs_Up":
+            case "Thumb_Up":
                 currSPlayPause = PlayPauseState.Empty;
                 currSCut = CutState.Empty;
                 currSVolume = VolumeState.Empty;
+                currSIndex = IndexState.Stopping;
+                currSMiddle = MiddleState.Stopping;
+                currSRing = RingState.Stopping;
+                currSPincky = PickyState.Stopping;
+                if (handedness == "Right") {
+                    currSEffects = EffectsState.StartPuttingEffects;
+                }
                 break;
-            case "Thumbs_Down":
+            case "Thumb_Down":
                 currSPlayPause = PlayPauseState.Empty;
                 currSCut = CutState.Empty;
                 currSVolume = VolumeState.Empty;
+                currSIndex = IndexState.Stopping;
+                currSMiddle = MiddleState.Stopping;
+                currSRing = RingState.Stopping;
+                currSPincky = PickyState.Stopping;
+                currSEffects = EffectsState.Empty;
                 break;
             case "ILoveYou":
                 currSPlayPause = PlayPauseState.Empty;
                 currSCut = CutState.Empty;
                 currSVolume = VolumeState.Empty;
+                currSIndex = IndexState.Stopping;
+                currSMiddle = MiddleState.Stopping;
+                currSRing = RingState.Stopping;
+                currSPincky = PickyState.Stopping;
+                currSEffects = EffectsState.Empty;
                 break;
         }
     }
@@ -452,6 +492,30 @@ const GestureController = (props: GestureControllerProps) => {
         }
     }
 
+    const handleEffects = (handedness : string, landmarks: any) => {
+
+        if(currSEffects == EffectsState.StartPuttingEffects && handedness == "Right") {
+
+            //Manage effects
+
+            currentThumbUpCoordinates = {x:landmarks[4].x, y: landmarks[4].y};
+
+            if(prevThumbUpCoordinates == null) {
+                prevThumbUpCoordinates = {x:landmarks[4].x, y: landmarks[4].y};
+            }
+          
+            updateEffectsValue();
+
+            console.warn("EFFECTIVE VALUE: " + effectValue);
+            
+        }
+        else if(handedness == "Right") {
+            prevThumbUpCoordinates = null;
+            effectValue = 0;
+        }
+
+    }
+
     const handleRegions = () => {
 
         if (currSCut == CutState.ClosedCutLeft && loopRegion == undefined && waveform) {
@@ -484,7 +548,7 @@ const GestureController = (props: GestureControllerProps) => {
             
             let currentVolume : number = 1-landmarks[8].x;
 
-            setVolume(parseFloat((currentVolume*100).toFixed(0)));
+            setVolume(Math.min(100, parseFloat((currentVolume*100).toFixed(0))));
             setIsVolumeVisible(true);
 
             waveform?.setVolume(currentVolume);
@@ -501,6 +565,64 @@ const GestureController = (props: GestureControllerProps) => {
 
         }
     }
+
+    /**
+     * Function to update the effect factor based on the angle taken by the Thumb_Up gesture
+     */
+    const updateEffectsValue = () => {
+
+        console.warn("prev =" + prevThumbUpCoordinates?.x + "  " + prevThumbUpCoordinates?.y);
+        console.warn("current =" + currentThumbUpCoordinates?.x + "  " + currentThumbUpCoordinates?.y);
+
+        var angle : number = 0;
+
+        if(currentThumbUpCoordinates?.x != prevThumbUpCoordinates?.x && currentThumbUpCoordinates?.y != prevThumbUpCoordinates?.y) {
+
+            //Angle between the 
+            angle = calculateAngle(currentThumbUpCoordinates!, prevThumbUpCoordinates!);
+            //const angleChange = angle - calculateAngle(prevThumbUpCoordinates!, currentThumbUpCoordinates!);
+
+        }
+
+        console.warn("angle =" + Math.abs(angle));
+        
+        //ChatGPT help -> prompt: update a variable base on turning coordinates clockwise and counterclockwise 
+        if (Math.abs(angle) > 1) {
+            if (angle > 0) {
+                // Rotate clockwise - Increase volume
+                var newEffectValue: number = effectValue + sensitivity;
+                //setEffectValue(Math.min(100, newEffectValue)); // Ensure volume doesn't exceed 100
+                effectValue += Math.min(50, newEffectValue) // Ensure volume doesn't exceed 50
+            } else {
+                // Rotate counterclockwise - Decrease volume
+                var newEffectValue: number = effectValue - sensitivity;
+                //setEffectValue(Math.min(0, newEffectValue)); // Ensure volume doesn't exceed 0
+                effectValue += Math.max(-50, newEffectValue) // Ensure volume doesn't exceed -50
+            }
+        }
+    
+        prevThumbUpCoordinates = {x: currentThumbUpCoordinates!.x, y: currentThumbUpCoordinates!.y};
+
+        console.warn("EFFECTIVE VALUE: " + effectValue);
+        
+    };
+
+    const calculateAngle = (coord1: Coordinates, coord2: Coordinates) => {
+        //const dx = coord2.x - coord1.x;
+        //const dy = coord2.y - coord1.y;
+
+        //return Math.atan2(dy, dx);
+        const angleCurrentPoint = Math.PI / 2 - Math.atan2(coord1.x, coord1.y);
+        const anglePreviousPoint = Math.PI / 2 - Math.atan2(coord2.x, coord2.y);
+
+        console.warn("angleCurrentPoint " + angleCurrentPoint);
+        console.warn("anglePreviousPoint " + anglePreviousPoint);
+
+        var diff = angleCurrentPoint - anglePreviousPoint;
+        
+        // Convert the angle to degrees (if needed)
+        return (diff * 180) / Math.PI;
+    };
 
     const closedPoints = (point1: any, point2: any) => {
         var a = point1.x - point2.x;
