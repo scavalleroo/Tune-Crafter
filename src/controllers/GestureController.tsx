@@ -103,17 +103,19 @@ const GestureController = (props: GestureControllerProps) => {
 
     var lastVideoTime : any = -1;
 
+    var songs : any = ["audio.mp3", "audio_techno.mp3", "audio_original.mp3"];
+    var currentSong : number = 0;
+
     if ('webkitSpeechRecognition' in window) {
         const recognition = new (window as any).webkitSpeechRecognition();
     
         recognition.continuous = true; // Continuously listen for commands
-        recognition.interimResults = true; // Get interim results (might not be the final command)
+        recognition.interimResults = false;
         recognition.onresult = (event: any) => {
           const current = event.resultIndex;
           const transcript = event.results[current][0].transcript.trim();
           let current_voice = document.getElementById('current_voice') as HTMLOutputElement;
           current_voice.innerText = "🎙️ " + transcript;
-          console.log("Voice command: " + transcript.toLowerCase().trim());
           switch (transcript.toLowerCase().trim()) {
             case 'start':
             case 'play':
@@ -133,6 +135,15 @@ const GestureController = (props: GestureControllerProps) => {
             case 'loop':
                 waveform?.setCurrentTime(0);
                 current_voice.innerText = "🎙️ Playback 🔁 ✅";
+              break;
+            case 'next':
+                currentSong = (currentSong + 1) % songs.length;
+                console.log("Next song: " + songs[currentSong]);
+                waveform?.load("assets/sounds/" + songs[currentSong]);
+                waveform?.on('ready', () => {
+                    waveform?.play();
+                });
+                current_voice.innerText = "🎙️ New Track ✅";
               break;
           }
         };

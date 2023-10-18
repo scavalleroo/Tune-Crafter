@@ -122,7 +122,6 @@ export class HartRateComponent extends React.Component<any, any> {
     }
 
     render(): React.ReactNode {
-        console.log("Render: " + this.state.likes.length);
         return (
             <div>
                 <p className="hb-text" id='harthRate'>Connecting...</p>

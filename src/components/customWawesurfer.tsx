@@ -20,7 +20,8 @@ const Waveform = React.forwardRef<WaveSurfer | null, WaveformProps>(
         cursorColor: '#F5F5F5',
         cursorWidth: 3,
       });
-
+      
+      console.log("audioUrl -> ", audioUrl);
       wavesurfer.load(audioUrl);
       wavesurferRef.current = wavesurfer;
 
