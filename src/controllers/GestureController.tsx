@@ -94,22 +94,50 @@ const GestureController = (props: GestureControllerProps) => {
 
     var lastVideoTime : any = -1;
 
+    if ('webkitSpeechRecognition' in window) {
+        const recognition = new (window as any).webkitSpeechRecognition();
+    
+        recognition.continuous = true; // Continuously listen for commands
+        recognition.interimResults = true; // Get interim results (might not be the final command)
+        recognition.onresult = (event: any) => {
+          const current = event.resultIndex;
+          const transcript = event.results[current][0].transcript.trim();
+          let current_voice = document.getElementById('current_voice') as HTMLOutputElement;
+          current_voice.innerText = "🎙️ " + transcript;
+          console.log("Voice command: " + transcript.toLowerCase().trim());
+          switch (transcript.toLowerCase().trim()) {
+            case 'start':
+            case 'play':
+              if (!waveform?.isPlaying()) { 
+                waveform?.playPause(); 
+                current_voice.innerText = "🎙️ Play ▶️ ✅";
+            }
+              break;
+            case 'pause':
+            case 'stop':
+              if (waveform?.isPlaying()) { 
+                waveform?.playPause(); 
+                current_voice.innerText = "🎙️ Pause ⏹️ ✅";
+            }
+              break;
+            case 'repeat':
+            case 'loop':
+                waveform?.setCurrentTime(0);
+                current_voice.innerText = "🎙️ Playback 🔁 ✅";
+              break;
+          }
+        };
+        recognition.start();
+      }
+
     //Excecuted every time the video or the waveForm change
     useEffect(() => {
-
         if (video && waveform) {    
             createGestureRecognizer().then(() => {
                 video?.addEventListener("loadeddata", predictWebcam);
                 window.requestAnimationFrame(predictWebcam.bind(this));
             });
-
             setAudioObjects();
-
-            console.warn("ECCOCIIIII");
-            console.warn(waveform.backend);
-            console.warn(waveform);
-            
-            // Handle Effects
         }
         
     }, [video, waveform]);
@@ -518,9 +546,10 @@ const GestureController = (props: GestureControllerProps) => {
     return (
         <>
             <div>
-                <canvas className="output_canvas" id="output_canvas" width="1280" height="720">  
-                </canvas>
+                <canvas className="output_canvas" id="output_canvas" width="1280" height="720">  </canvas>
             </div>
+            <p id='current_voice' className="currVoice">🎙️</p>
+            <p className="tooltipVoice">Voice commands</p>
             <p id='current_gesture' className="currGesture">🙌</p>
             <p className="tooltipGesture">Current gesture</p>
             <div className="volumeProgressBar" style={{ display: isVolumeVisible ? "block" : "none"}}>

@@ -139,6 +139,28 @@ html {
   margin-top: 40px;
 }
 
+.currVoice {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  margin-top: 25px;
+  background: white;
+  padding: 10px;
+  border-radius: 10px;
+  max-width: 200px;
+  width: auto;
+  color: black;
+  font-size: 16px;
+}
+
+.tooltipVoice {
+  color: lightgrey;
+  font-size: 14px;
+  top: 10px;
+  left: 10px;
+  position: absolute;
+}
+
 .ebony {
   color: #0B060E;
 }
