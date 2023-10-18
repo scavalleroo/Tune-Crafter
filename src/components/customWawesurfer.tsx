@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { WaveSurfer } from 'wavesurfer-react/dist/utils/createWavesurfer';
 
-
 interface WaveformProps {
   audioUrl: string;
 }

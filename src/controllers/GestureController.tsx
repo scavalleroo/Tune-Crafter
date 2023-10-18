@@ -54,19 +54,26 @@ enum VolumeState {
     Started = "startedManagingVolume"
 }
 
+enum EffectsState {
+    Empty = "empty",
+    StartPuttingEffects = "startPuttingEffects",
+}
+
 interface GestureControllerProps {
     video: HTMLVideoElement | null,
     waveform : WaveSurfer | null
 }
 
 const GestureController = (props: GestureControllerProps) => {
-    const video = props.video;
-    const waveform = props.waveform;
+
+    // Define a sensitivity value to control effect change speed
+    var video = props.video;
+    var waveform = props.waveform;
     var gestureRecognizer : GestureRecognizer | null = null;
     //var gestureOutput : any | null = null;
     var canvasElement : any | null = null;
     var canvasCtx : any | null = null;
-
+    
     var currSPlayPause: PlayPauseState = PlayPauseState.Empty;
     var currSCut: CutState = CutState.Empty;
     var currSIndex: IndexState = IndexState.Listening;
@@ -74,6 +81,7 @@ const GestureController = (props: GestureControllerProps) => {
     var currSRing: RingState = RingState.Listening;
     var currSPincky: PickyState = PickyState.Listening;
     var currSVolume: VolumeState = VolumeState.Empty;
+    var currSEffects: EffectsState = EffectsState.Empty;
 
     var results: any = undefined;
     var loopRegion: any = undefined;
@@ -87,10 +95,11 @@ const GestureController = (props: GestureControllerProps) => {
 
     var volumeTimer : any = null;
 
-    const audioManager = new AudioManager();
+    const soundManager: AudioManager = new AudioManager();
     
     const [volume, setVolume] = useState<number>(50);
     const [isVolumeVisible, setIsVolumeVisible] = useState<boolean>(false);
+    var speedValue : number = 1;
 
     var lastVideoTime : any = -1;
 
@@ -129,6 +138,10 @@ const GestureController = (props: GestureControllerProps) => {
         };
         recognition.start();
       }
+    //First functions that has to be excecuted just at the first render
+    useEffect(() => {
+        setAudioObjects();
+    }, [])
 
     //Excecuted every time the video or the waveForm change
     useEffect(() => {
@@ -204,22 +217,20 @@ const GestureController = (props: GestureControllerProps) => {
         // audioManager.loadSound('electribe', 'assets/sounds/electribe-hats.mp3');
         // audioManager.loadSound('clap', 'assets/sounds/mega-clap.mp3');
 
-        audioManager.loadSound('mainMusic', 'assets/sounds/audio.mp3')
-        audioManager.loadSound('bassdrum', 'assets/sounds/kick.wav');
-        audioManager.loadSound('snare', 'assets/sounds/snare.wav');
-        audioManager.loadSound('hat', 'assets/sounds/hat.wav');
-        audioManager.loadSound('clap', 'assets/sounds/clap.wav');
+        soundManager.loadSound('mainMusic', 'assets/sounds/audio.mp3')
+        soundManager.loadSound('bassdrum', 'assets/sounds/kick.wav');
+        soundManager.loadSound('snare', 'assets/sounds/snare.wav');
+        soundManager.loadSound('hat', 'assets/sounds/hat.wav');
+        soundManager.loadSound('clap', 'assets/sounds/clap.wav');
         
     }
 
     const setupCanvas = () => {
-        if (canvasCtx == undefined) {  //gestureOutput == undefined || 
-            //gestureOutput = document.getElementById("gesture_output") as HTMLOutputElement;
+        if (canvasCtx == undefined) { 
             canvasElement = document.getElementById("output_canvas") as HTMLCanvasElement;
             canvasCtx = canvasElement.getContext("2d");
             canvasElement.style.height = videoHeight;
             canvasElement.style.width = videoWidth;
-            //gestureOutput.style.width = videoWidth;
         }
 
         canvasCtx.save();
@@ -268,6 +279,7 @@ const GestureController = (props: GestureControllerProps) => {
             detectAction(categoryName, categoryScore, handedness, results.landmarks[i]);
             handleDrums(handedness, results.landmarks[i]);
             handlePlayPause();
+            handleEffects(handedness, results.landmarks[i]);
             handleRegions();
             handleVolume(results.landmarks[i]);
         }
@@ -288,6 +300,10 @@ const GestureController = (props: GestureControllerProps) => {
                     }
                 }
                 currSVolume = VolumeState.Empty;
+                currSEffects = EffectsState.Empty;
+
+                //handleDrums(handedness, landmarks);
+
                 break;
             case "Pointing_Up":
                 currSPlayPause = PlayPauseState.Empty;
@@ -299,6 +315,7 @@ const GestureController = (props: GestureControllerProps) => {
                 currSMiddle = MiddleState.Stopping;
                 currSRing = RingState.Stopping;
                 currSPincky = PickyState.Stopping;
+                currSEffects = EffectsState.Empty;
                 if(handedness == "Right") {
                     currSVolume = VolumeState.Started;
                     current_gesture.innerText = "👆 + ↔️ → Down 🔈 ↔️ 🔊 Up";
@@ -318,6 +335,7 @@ const GestureController = (props: GestureControllerProps) => {
                 currSMiddle = MiddleState.Stopping;
                 currSRing = RingState.Stopping;
                 currSPincky = PickyState.Stopping;
+                currSEffects = EffectsState.Empty;
                 break;
             case "Closed_Fist":
                 if (handedness == "Right") {
@@ -337,6 +355,7 @@ const GestureController = (props: GestureControllerProps) => {
                 currSMiddle = MiddleState.Stopping;
                 currSRing = RingState.Stopping;
                 currSPincky = PickyState.Stopping;
+                currSEffects = EffectsState.Empty;
                 break;
             case "Victory":
                 currSPlayPause = PlayPauseState.Empty;
@@ -345,6 +364,7 @@ const GestureController = (props: GestureControllerProps) => {
                 currSMiddle = MiddleState.Stopping;
                 currSRing = RingState.Stopping;
                 currSPincky = PickyState.Stopping;
+                currSEffects = EffectsState.Empty;
                 switch (currSCut) {
                     case CutState.Empty:
                         if (handedness == "Left") {
@@ -372,21 +392,33 @@ const GestureController = (props: GestureControllerProps) => {
                         break;
                 }
                 break;
-            case "Thumbs_Up":
+            case "Thumb_Up":
                 currSPlayPause = PlayPauseState.Empty;
                 if(currSCut != CutState.Empty) {
                     wsRegions.clearRegions();
                     currSCut = CutState.Empty;
                 }
                 currSVolume = VolumeState.Empty;
+                currSIndex = IndexState.Stopping;
+                currSMiddle = MiddleState.Stopping;
+                currSRing = RingState.Stopping;
+                currSPincky = PickyState.Stopping;
+                if (handedness == "Right") {
+                    currSEffects = EffectsState.StartPuttingEffects;
+                }
                 break;
-            case "Thumbs_Down":
+            case "Thumb_Down":
                 currSPlayPause = PlayPauseState.Empty;
                 if(currSCut != CutState.Empty) {
                     wsRegions.clearRegions();
                     currSCut = CutState.Empty;
                 }
                 currSVolume = VolumeState.Empty;
+                currSIndex = IndexState.Stopping;
+                currSMiddle = MiddleState.Stopping;
+                currSRing = RingState.Stopping;
+                currSPincky = PickyState.Stopping;
+                currSEffects = EffectsState.Empty;
                 break;
             case "ILoveYou":
                 currSPlayPause = PlayPauseState.Empty;
@@ -395,6 +427,11 @@ const GestureController = (props: GestureControllerProps) => {
                     currSCut = CutState.Empty;
                 }
                 currSVolume = VolumeState.Empty;
+                currSIndex = IndexState.Stopping;
+                currSMiddle = MiddleState.Stopping;
+                currSRing = RingState.Stopping;
+                currSPincky = PickyState.Stopping;
+                currSEffects = EffectsState.Empty;
                 break;
         }
         setGestureMesssage();
@@ -434,7 +471,7 @@ const GestureController = (props: GestureControllerProps) => {
             if(closedPoints(landmarks[8], landmarks[4], 0.05)) {
                 if(currSIndex == IndexState.Listening) {
                     // Play the audio in the background
-                    audioManager.playSound('bassdrum');
+                    soundManager.playSound('bassdrum');
                     current_gesture.innerText = "🥁 ✅";
                     currSIndex = IndexState.Stopping;
                 }
@@ -446,7 +483,7 @@ const GestureController = (props: GestureControllerProps) => {
             if(closedPoints(landmarks[12], landmarks[4], 0.05)) {
                 if(currSMiddle == MiddleState.Listening) {
                     // Play the audio in the background
-                    audioManager.playSound('snare');
+                    soundManager.playSound('snare');
                     current_gesture.innerText = "🥁 ✅";
                     currSMiddle = MiddleState.Stopping;
                 }
@@ -458,7 +495,7 @@ const GestureController = (props: GestureControllerProps) => {
             if (closedPoints(landmarks[16], landmarks[4], 0.05)) {
                 if(currSRing == RingState.Listening) {
                     // Play the audio in the background
-                    audioManager.playSound('clap');
+                    soundManager.playSound('clap');
                     current_gesture.innerText = "🥁 ✅";
                     currSRing = RingState.Stopping;
                 }   
@@ -470,7 +507,7 @@ const GestureController = (props: GestureControllerProps) => {
             if (closedPoints(landmarks[20], landmarks[4], 0.05)) {
                 if(currSPincky == PickyState.Listening) {
                     // Play sounds
-                    audioManager.playSound('hat');
+                    soundManager.playSound('hat');
                     current_gesture.innerText = "👏 ✅";
                     currSPincky = PickyState.Stopping;
                 }  
@@ -485,6 +522,28 @@ const GestureController = (props: GestureControllerProps) => {
             waveform.playPause();
             currSPlayPause = PlayPauseState.Empty;
         }
+    }
+
+    const handleEffects = (handedness : string, landmarks: any) => {
+
+        if(currSEffects == EffectsState.StartPuttingEffects && handedness == "Right") {
+
+            //Manage effects
+
+            var currentThumbUpCoordinates = {x:landmarks[4].x, y: landmarks[4].y};
+            var referencePoint = {x:landmarks[0].x, y: landmarks[0].y}
+          
+            updateEffectsValue(currentThumbUpCoordinates!, referencePoint!);
+
+            console.warn("EFFECTIVE VALUE: " + speedValue);
+
+            waveform?.setPlaybackRate(speedValue);
+            
+        }
+        else if(handedness == "Right") {
+            speedValue = 1;
+        }
+
     }
 
     const handleRegions = () => {
@@ -518,7 +577,7 @@ const GestureController = (props: GestureControllerProps) => {
             
             let currentVolume : number = 1-landmarks[8].x;
 
-            setVolume(parseFloat((currentVolume*100).toFixed(0)));
+            setVolume(Math.min(100, parseFloat((currentVolume*100).toFixed(0))));
             setIsVolumeVisible(true);
             waveform?.setVolume(currentVolume);
 
@@ -532,6 +591,31 @@ const GestureController = (props: GestureControllerProps) => {
             }, 3000);
         }
     }
+
+    /**
+     * Function to update the effect factor based on the angle taken by the Thumb_Up gesture
+     */
+    const updateEffectsValue = (point1: Coordinates, point2: Coordinates) => {
+        var angle : number = 0;
+
+        angle = calculateAngle(point1, point2);
+
+        speedValue = angle/100;
+
+        console.warn("EFFECTIVE VALUE: " + speedValue);
+        
+    };
+
+    const calculateAngle = (coord1: Coordinates, coord2: Coordinates) => {
+        const dx = coord2.x - coord1.x;
+        const dy = coord2.y - coord1.y;
+
+        const angle = Math.atan2(dy, dx);
+
+        const angleDegree = (angle * 180) / Math.PI
+
+        return angleDegree;
+    };
 
     const closedPoints = (point1: any, point2: any, precision: number) => {
         var a = point1.x - point2.x;
