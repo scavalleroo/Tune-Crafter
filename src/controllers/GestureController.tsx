@@ -416,6 +416,7 @@ const GestureController = (props: GestureControllerProps) => {
                 currSPincky = PickyState.Stopping;
                 if (handedness == "Right") {
                     currSEffects = EffectsState.StartPuttingEffects;
+                    current_gesture.innerText = "👍 + 🔄 → Speed";
                 }
                 break;
             case "Thumb_Down":
@@ -538,18 +539,13 @@ const GestureController = (props: GestureControllerProps) => {
     const handleEffects = (handedness : string, landmarks: any) => {
 
         if(currSEffects == EffectsState.StartPuttingEffects && handedness == "Right") {
-
             //Manage effects
-
             var currentThumbUpCoordinates = {x:landmarks[4].x, y: landmarks[4].y};
             var referencePoint = {x:landmarks[0].x, y: landmarks[0].y}
-          
             updateEffectsValue(currentThumbUpCoordinates!, referencePoint!);
-
-            console.warn("EFFECTIVE VALUE: " + speedValue);
-
+            let current_gesture = document.getElementById('current_gesture') as HTMLOutputElement;
+            current_gesture.innerText = "👍 + 🔄 → Speed: " + speedValue.toFixed(2) + "x";
             waveform?.setPlaybackRate(speedValue);
-            
         }
         else if(handedness == "Right") {
             speedValue = 1;
