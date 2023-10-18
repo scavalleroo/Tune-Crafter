@@ -95,33 +95,12 @@ const GestureController = (props: GestureControllerProps) => {
 
     var volumeTimer : any = null;
 
-    const soundManager = new AudioManager();
+    const soundManager: AudioManager = new AudioManager();
     var effectManager: AudioManager;
     
     const [volume, setVolume] = useState<number>(50);
     const [isVolumeVisible, setIsVolumeVisible] = useState<boolean>(false);
-    var effectValue : number = 0;
-
-    var thumbCoordinates: Coordinates = {
-        x: 100,
-        y: 100
-    };
-    var indexCoordinates: Coordinates = {
-        x: 200,
-        y: 200
-    };
-    var middleCoordinates: Coordinates = {
-        x: 300,
-        y: 300
-    };
-    var ringCoordinates: Coordinates = {
-        x: 400,
-        y: 400
-    };
-    var pinkyCoordinates: Coordinates = {
-        x: 500,
-        y: 500
-    };
+    var speedValue : number = 1;
 
     var lastVideoTime : any = -1;
 
@@ -139,7 +118,6 @@ const GestureController = (props: GestureControllerProps) => {
             });
             
             // Handle Effects
-            console.warn("ECCOCIIIII");
             //console.warn(waveform.backend);
             console.warn(waveform);
             effectManager = new AudioManager(waveform.backend.getAudioContext());
@@ -204,18 +182,6 @@ const GestureController = (props: GestureControllerProps) => {
 
     const setAudioObjects = () => {
 
-        /*
-        this.audioBassdrum.preload = 'auto';
-        this.audioSnare.preload = 'auto';
-        this.audioElecribe.preload = 'auto';
-        this.audioClap.preload = 'auto'
-
-        this.audioBassdrum.volume = 1.0;
-        this.audioSnare.volume = 1.0;
-        this.audioElecribe.volume = 1.0;
-        this.audioClap.volume = 1.0;
-        */
-
         // Load audio files
         soundManager.loadSound('mainMusic', 'assets/sounds/audio.mp3')
         soundManager.loadSound('bassdrum', 'assets/sounds/bassdrum.mp3');
@@ -226,13 +192,11 @@ const GestureController = (props: GestureControllerProps) => {
     }
 
     const setupCanvas = () => {
-        if (canvasCtx == undefined) {  //gestureOutput == undefined || 
-            //gestureOutput = document.getElementById("gesture_output") as HTMLOutputElement;
+        if (canvasCtx == undefined) { 
             canvasElement = document.getElementById("output_canvas") as HTMLCanvasElement;
             canvasCtx = canvasElement.getContext("2d");
             canvasElement.style.height = videoHeight;
             canvasElement.style.width = videoWidth;
-            //gestureOutput.style.width = videoWidth;
         }
 
         canvasCtx.save();
@@ -483,7 +447,6 @@ const GestureController = (props: GestureControllerProps) => {
         if (currSPlayPause == PlayPauseState.Completed && waveform) {
 
             waveform.playPause();
-            //effectManager.play();
             currSPlayPause = PlayPauseState.Empty;
         }
     }
@@ -499,12 +462,13 @@ const GestureController = (props: GestureControllerProps) => {
           
             updateEffectsValue(currentThumbUpCoordinates!, referencePoint!);
 
-            console.warn("EFFECTIVE VALUE: " + effectValue);
+            console.warn("EFFECTIVE VALUE: " + speedValue);
+
+            waveform?.setPlaybackRate(speedValue);
             
         }
         else if(handedness == "Right") {
-            effectValue = 0;
-
+            speedValue = 1;
         }
 
     }
@@ -567,9 +531,9 @@ const GestureController = (props: GestureControllerProps) => {
 
         angle = calculateAngle(point1, point2);
 
-        effectValue = angle;
+        speedValue = angle/100;
 
-        console.warn("EFFECTIVE VALUE: " + effectValue);
+        console.warn("EFFECTIVE VALUE: " + speedValue);
         
     };
 
@@ -608,12 +572,3 @@ const GestureController = (props: GestureControllerProps) => {
 };
 
 export default GestureController;
-
-/**
- * <p id='gesture_output'></p>
- *              <IconsUI x={thumbCoordinates.x} y={thumbCoordinates.y}></IconsUI>
-                <IconsUI x={indexCoordinates.x} y={indexCoordinates.y}></IconsUI>
-                <IconsUI x={middleCoordinates.x} y={middleCoordinates.y}></IconsUI>
-                <IconsUI x={ringCoordinates.x} y={ringCoordinates.y}></IconsUI>
-                <IconsUI x={pinkyCoordinates.x} y={pinkyCoordinates.y}></IconsUI>
- */

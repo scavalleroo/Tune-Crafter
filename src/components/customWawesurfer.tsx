@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { WaveSurfer } from 'wavesurfer-react/dist/utils/createWavesurfer';
 
-
 interface WaveformProps {
   audioUrl: string;
 }
@@ -16,7 +15,9 @@ const Waveform = React.forwardRef<WaveSurfer | null, WaveformProps>(
         container: '#waveform',
         backend: 'WebAudio',
         waveColor: '#A011A7', 
-        progressColor: '#e875f0', //9D11A6
+        progressColor: '#e875f0',
+        audioRate: 1, // set the initial playback rate
+        //audioContext:
       });
 
       wavesurfer.load(audioUrl);
