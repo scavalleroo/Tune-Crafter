@@ -4,15 +4,15 @@ import './GestureController.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import { GestureRecognizer, FilesetResolver, DrawingUtils } from '../../node_modules/@mediapipe/tasks-vision';
 import { AudioManager } from "../AudioManager";
-//import IconsUI from "../IconsUI";
-import VolumeProgressBar from "../components/volumeProgressBar";
 import WaveSurfer from "wavesurfer.js";
+import VolumeProgressBar from "../components/VolumeProgressBar";
 
 export interface Coordinates {
     x: number;
     y: number;
 }
 
+//Finite States Machines
 enum CutState {
     Empty = "empty",
     StartCuttingLeft = "startCuttingLeft",
@@ -59,6 +59,7 @@ enum EffectsState {
     StartPuttingEffects = "startPuttingEffects",
 }
 
+//Interface on props passed by App.tsx
 interface GestureControllerProps {
     video: HTMLVideoElement | null,
     waveform : WaveSurfer | null
@@ -70,10 +71,10 @@ const GestureController = (props: GestureControllerProps) => {
     var video = props.video;
     var waveform = props.waveform;
     var gestureRecognizer : GestureRecognizer | null = null;
-    //var gestureOutput : any | null = null;
     var canvasElement : any | null = null;
     var canvasCtx : any | null = null;
     
+    //Current states in the implemented Finite State Machine
     var currSPlayPause: PlayPauseState = PlayPauseState.Empty;
     var currSCut: CutState = CutState.Empty;
     var currSIndex: IndexState = IndexState.Listening;
@@ -96,7 +97,6 @@ const GestureController = (props: GestureControllerProps) => {
     var volumeTimer : any = null;
 
     const soundManager: AudioManager = new AudioManager();
-    var effectManager: AudioManager;
     
     const [volume, setVolume] = useState<number>(50);
     const [isVolumeVisible, setIsVolumeVisible] = useState<boolean>(false);
@@ -116,17 +116,13 @@ const GestureController = (props: GestureControllerProps) => {
                 video?.addEventListener("loadeddata", predictWebcam);
                 window.requestAnimationFrame(predictWebcam.bind(this));
             });
-            
-            // Handle Effects
-            //console.warn(waveform.backend);
-            console.warn(waveform);
-            effectManager = new AudioManager(waveform.backend.getAudioContext());
         }
         
     }, [video, waveform]);
 
-    // Add other useEffect hooks as needed
-
+    /**
+     * Function to create a gesture recognizer
+     */
     const createGestureRecognizer = async () => {
 
         const vision = await FilesetResolver.forVisionTasks("../../node_modules/@mediapipe/tasks-vision/wasm");
@@ -145,7 +141,6 @@ const GestureController = (props: GestureControllerProps) => {
             regions?.on('region-created', (region: any) => {
                 if (region.loop) {
                     region.playLoop();
-                    console.log(region);
                 }
             });
             regions?.on('region-out', (region: any) => {
@@ -154,13 +149,15 @@ const GestureController = (props: GestureControllerProps) => {
                 }
             });
             regions?.on('region-removed', (_: any) => {
-                console.log("Region removed");
                 waveform?.play();
             });
             wsRegions = regions;
         }
     };
 
+    /**
+     * Function to predict webcam gestures
+     */
     const predictWebcam = () => {
 
         // Now let's start detecting the stream.
@@ -172,7 +169,6 @@ const GestureController = (props: GestureControllerProps) => {
                 lastVideoTime = video!.currentTime;
                 const newResults = gestureRecognizer?.recognizeForVideo(video!, nowInMs);
                 results = newResults;
-                console.log(newResults);
             }
             drawHands();
             performAction();
@@ -180,6 +176,9 @@ const GestureController = (props: GestureControllerProps) => {
         }
     };
 
+    /**
+     * Function to set up audio objects
+     */
     const setAudioObjects = () => {
 
         // Load audio files
@@ -203,6 +202,9 @@ const GestureController = (props: GestureControllerProps) => {
         canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
     }
 
+    /**
+     * Function that draw the users hands detected by the program. It restore the CanvasContext
+     */
     const drawHands = () => {
         const drawingUtils = new DrawingUtils(canvasCtx);
         if (results.landmarks) {
@@ -226,18 +228,11 @@ const GestureController = (props: GestureControllerProps) => {
 
     const performAction = () => {
 
-        //In modalità doppia mano non ferma la musica
-
         for (let i = 0; i < results.gestures.length; i++) {
             const categoryName = results.gestures[i][0].categoryName;
-            const categoryScore = parseFloat(
-                (results.gestures[i][0].score * 100).toString()
-            ).toFixed(2);
             const handedness = results.handednesses[i][0].displayName;
 
-            //gestureOutput.innerText = "Cut State " + currSCut;
-
-            detectAction(categoryName, categoryScore, handedness, results.landmarks[i]);
+            detectAction(categoryName, handedness, results.landmarks[i]);
             handleDrums(handedness, results.landmarks[i]);
             handlePlayPause();
             handleEffects(handedness, results.landmarks[i]);
@@ -246,8 +241,7 @@ const GestureController = (props: GestureControllerProps) => {
         }
     }
 
-    const detectAction = (categoryName: string, categoryScore: any, handedness: string, landmarks: any) => {
-        console.warn(categoryName);
+    const detectAction = (categoryName: string, handedness: string, landmarks: any) => {
         switch (categoryName) {
             case "None":
                 if (currSCut == CutState.StartCuttingLeft && handedness == "Left" && closedPoints(landmarks[6], landmarks[10]) && closedPoints(landmarks[7], landmarks[11]) && closedPoints(landmarks[8], landmarks[12])) {
@@ -260,8 +254,6 @@ const GestureController = (props: GestureControllerProps) => {
 
                 currSVolume = VolumeState.Empty;
                 currSEffects = EffectsState.Empty;
-
-                //handleDrums(handedness, landmarks);
 
                 break;
             case "Pointing_Up":
@@ -443,6 +435,9 @@ const GestureController = (props: GestureControllerProps) => {
         }
     }
 
+    /**
+     * Function to handle play/pause based on detected gestures (Closed_Fist)
+     */
     const handlePlayPause = () => {
         if (currSPlayPause == PlayPauseState.Completed && waveform) {
 
@@ -451,18 +446,18 @@ const GestureController = (props: GestureControllerProps) => {
         }
     }
 
+    /**
+     * Function to handle audio effects based on detected gestures (Thumb_Up)
+     */
     const handleEffects = (handedness : string, landmarks: any) => {
 
         if(currSEffects == EffectsState.StartPuttingEffects && handedness == "Right") {
 
-            //Manage effects
-
+            //Managing the effect
             var currentThumbUpCoordinates = {x:landmarks[4].x, y: landmarks[4].y};
-            var referencePoint = {x:landmarks[0].x, y: landmarks[0].y}
+            var referencePoint = {x:landmarks[0].x, y: landmarks[0].y} //Thumb tip and wrist landmarks of the model hand scheleton
           
             updateEffectsValue(currentThumbUpCoordinates!, referencePoint!);
-
-            console.warn("EFFECTIVE VALUE: " + speedValue);
 
             waveform?.setPlaybackRate(speedValue);
             
@@ -473,6 +468,9 @@ const GestureController = (props: GestureControllerProps) => {
 
     }
 
+    /**
+     * Function to handle waveform regions based on detected gestures (creation and deletion)
+     */
     const handleRegions = () => {
 
         if (currSCut == CutState.ClosedCutLeft && loopRegion == undefined && waveform) {
@@ -499,6 +497,9 @@ const GestureController = (props: GestureControllerProps) => {
         }
     }
 
+    /**
+     * Function to handle volume control based on the gesture detected
+     */
     const handleVolume = (landmarks : any) => {
 
         if(currSVolume == VolumeState.Started) {
@@ -524,7 +525,8 @@ const GestureController = (props: GestureControllerProps) => {
     }
 
     /**
-     * Function to update the effect factor based on the angle taken by the Thumb_Up gesture
+     * Function to update the effect factor based on the angle taken by the Thumb_Up gesture, specifically the angle from the 
+     * segment between the thumb tip and the wrist (landmarks 4 and 0 of the model scheleton)
      */
     const updateEffectsValue = (point1: Coordinates, point2: Coordinates) => {
         var angle : number = 0;
@@ -532,11 +534,13 @@ const GestureController = (props: GestureControllerProps) => {
         angle = calculateAngle(point1, point2);
 
         speedValue = angle/100;
-
-        console.warn("EFFECTIVE VALUE: " + speedValue);
         
     };
 
+    /**
+     * Function to calculate the angle between two coordinates and the x axis starting from (0,0)
+     * Online help: "How to calculate the angle between two points and the X axis?"
+     */
     const calculateAngle = (coord1: Coordinates, coord2: Coordinates) => {
         const dx = coord2.x - coord1.x;
         const dy = coord2.y - coord1.y;
@@ -548,6 +552,9 @@ const GestureController = (props: GestureControllerProps) => {
         return angleDegree;
     };
 
+    /**
+     * Function to check if two points are close enough in order to detect the finger tips touch
+     */
     const closedPoints = (point1: any, point2: any) => {
         var a = point1.x - point2.x;
         var b = point1.y - point2.y;

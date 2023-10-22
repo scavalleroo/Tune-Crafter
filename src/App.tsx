@@ -1,12 +1,12 @@
 import React, { useRef, useEffect, useState, Ref } from "react";
 import { hasGetUserMedia } from './utils/helpers';
-import { HartRateComponent } from './components/hartRateComponent';
 import GestureController from "./controllers/GestureController";
 
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import { WaveSurfer } from 'wavesurfer-react/dist/utils/createWavesurfer';
-import Waveform from "./components/customWawesurfer";
+import { HartRateComponent } from "./components/HartRateComponent";
+import Waveform from "./components/CustomWawesurfer";
 
 function App() {
 
@@ -19,10 +19,8 @@ function App() {
   useEffect(() => {
 
     if (hasGetUserMedia()) {
-      console.warn("Enebling webcam");
+      // Enabling webcam
       enableCam();
-      console.warn("Webcam enabled");
-
     } else {
       console.warn("getUserMedia() is not supported by your browser");
     }

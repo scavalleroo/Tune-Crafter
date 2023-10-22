@@ -32,9 +32,7 @@ class AudioScheduler {
             source.buffer = audioBufferMap.get("snare")!;
             source.connect(audioContext.destination);
             source.start();
-
-            console.warn("Nel playAudio");
-
+            
             setTimeout(() => {
                 source.stop();
                 playAudio(); // Schedule the next iteration

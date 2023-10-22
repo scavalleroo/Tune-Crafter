@@ -58,9 +58,6 @@ export class AudioManager {
     }
 
     playPauseMainMusic() : void {
-
-      console.warn("Entratooosfodof");
-      
       if(this.isPlaying) {
         this.audioBufferMap.get("mainMusic");
         this.isPlaying = false;
@@ -71,24 +68,6 @@ export class AudioManager {
       }
 
     }
-
-    public setEffect() {
-      // panning
-      /*
-      const pannerOptions = {pan: 0};
-      const panner = new StereoPannerNode(audioCtx, pannerOptions);
-
-      const pannerControl = document.querySelector('[data-action="panner"]');
-      pannerControl.addEventListener('input', function() {
-        panner.pan.value = this.value;	
-      }, false);
-
-      // connect our graph
-      track.connect(gainNode).connect(panner).connect(audioCtx.destination);
-      */
-    }
-
-
   
   }
   

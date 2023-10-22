@@ -17,7 +17,7 @@ import {
 } from '../../node_modules/@mediapipe/tasks-vision';
 import { AudioManager } from "../AudioManager";
 import IconsUI from "../IconsUI";
-import VolumeProgressBar from "../components/volumeProgressBar";
+import VolumeProgressBar from "../components/VolumeProgressBar";
 
 //Icons coordinates
 interface Coordinates {

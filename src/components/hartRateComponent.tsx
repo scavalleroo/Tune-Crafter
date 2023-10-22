@@ -13,7 +13,6 @@ export class HartRateComponent extends React.Component {
 
     onConnect() {
         socket.emit("connect_web_client");
-        console.log("Connected: " + socket.id);
         document.getElementById('harthRate')!.innerHTML = "Connected to webserver. Waiting for hart rate...";
     }
 
@@ -22,7 +21,6 @@ export class HartRateComponent extends React.Component {
     }
 
     updateHartRateUI(hartRate: any) {
-        console.log("Response: " + hartRate);
         document.getElementById('harthRate')!.innerHTML = "Hart rate: " + hartRate;
     }
 
