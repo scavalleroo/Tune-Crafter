@@ -35,14 +35,14 @@ def connect_web_client(sid):
     sids_web.add(sid)
 
 @sio.event
-def hart_beat_event(sid, data):
+def heart_beat_event(sid, data):
     print(f"Received custom event from: {data}")
     broadcast_to_clients_web(data)
 
 def broadcast_to_clients_web(data):
     for sid in sids_web:
         print("Signal sent to client:", sid)
-        sio.emit('hart_beat_event', data, room=sid)
+        sio.emit('heart_beat_event', data, room=sid)
 
 if __name__ == "__main__":
     # Get server configuration from environment variables

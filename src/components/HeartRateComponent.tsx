@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { socket } from "../utils/SocketClient";
 
-export class HartRateComponent extends React.Component<any, any> {
+export class HeartRateComponent extends React.Component<any, any> {
 
     private interval: any;
 
@@ -12,35 +12,35 @@ export class HartRateComponent extends React.Component<any, any> {
         };
         socket.on('connect', this.onConnect);
         socket.on('disconnect', this.onDisconnect);
-        socket.on('hart_beat_event', (data) => {
-            this.updateHartRateUI(data);
+        socket.on('heart_beat_event', (data) => {
+            this.updateHeartRateUI(data);
             if(this.interval) {
                 clearInterval(this.interval);
             }
-            this.addHart(data);
+            this.addHeart(data);
         });
         socket.connect();
 
         this.cleanLike = this.cleanLike.bind(this);
-        this.addHart = this.addHart.bind(this);
+        this.addHeart = this.addHeart.bind(this);
     }
 
     onConnect() {
         socket.emit("connect_web_client");
         console.log("Connected: " + socket.id);
-        document.getElementById('harthRate')!.innerHTML = "Connected to webserver ✅. Waiting for hart rate... ⌚️";
+        document.getElementById('hearthRate')!.innerHTML = "Connected to webserver ✅. Waiting for heart rate... ⌚️";
     }
 
     onDisconnect() {
         console.log("Disconnected: " + socket.id);
     }
 
-    updateHartRateUI(heartRate: any) {
+    updateHeartRateUI(heartRate: any) {
         console.log("Response: " + heartRate);
-        document.getElementById('harthRate')!.innerHTML = heartRate + " ❤️";
+        document.getElementById('hearthRate')!.innerHTML = heartRate + " ❤️";
     }
 
-    addHart(heartRate: any) {
+    addHeart(heartRate: any) {
         this.interval = setInterval(() => {
             this.setState((prevState: any) => ({
                 likes: [...prevState.likes, Math.random()]
@@ -124,7 +124,7 @@ export class HartRateComponent extends React.Component<any, any> {
     render(): React.ReactNode {
         return (
             <div>
-                <p className="hb-text" id='harthRate'>Connecting...</p>
+                <p className="hb-text" id='hearthRate'>Connecting...</p>
                 {this.state.likes.map((id: any) => (
                     <this.Bubble onAnimationEnd={this.cleanLike} key={id} id={id} />
                 ))}

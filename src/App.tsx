@@ -1,23 +1,16 @@
 import React, { useRef, useEffect, useState, Ref } from "react";
 import { hasGetUserMedia } from './utils/helpers';
-import { HartRateComponent } from './components/hartRateComponent';
+import { HeartRateComponent } from './components/HeartRateComponent';
 import GestureController from "./controllers/GestureController";
-import { AudioManager } from "./AudioManager";
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.css';
 
 import { WaveSurfer } from 'wavesurfer-react/dist/utils/createWavesurfer';
-import Waveform from "./components/customWawesurfer";
+import Waveform from "./components/CustomWawesurfer";
 
 function App() {
-
+  let audioUrl = "assets/sounds/audio.mp3"
   const waveformRef: Ref<WaveSurfer> | null = useRef<WaveSurfer | null>(null);
-
-  let audioUrl = 'assets/sounds/audio.mp3';
-  const audioManager = new AudioManager();
-  audioManager.loadSound('snare', 'assets/sounds/dubstep-snare-drum.mp3');
-  audioManager.loadSound('electribe', 'assets/sounds/electribe-hats.mp3');
-  audioManager.loadSound('clap', 'assets/sounds/mega-clap.mp3');
   const [video, setVideo] = useState<HTMLVideoElement | null>(null);
   // Check if the browser supports the WebSpeech API
 
@@ -26,7 +19,6 @@ function App() {
       console.warn("Enebling webcam");
       enableCam();
       console.warn("Webcam enabled");
-
     } else {
       console.warn("getUserMedia() is not supported by your browser");
     }
@@ -50,7 +42,7 @@ function App() {
   return (
     <>
       <section className="main-cont">
-        <HartRateComponent />
+        <HeartRateComponent />
         <div className="waveForm">
           <Waveform ref={waveformRef} audioUrl={audioUrl} />
         </div>

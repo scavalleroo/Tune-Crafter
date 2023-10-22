@@ -2,10 +2,8 @@
 
 //Make it a function calss?
 export class AudioManager {
-
     private audioContext: AudioContext | null; 
     private audioBufferMap: Map<string, AudioBuffer>;  //With each sound
-    private isPlaying : boolean = false;
 
     constructor(audioContext: AudioContext | null = null) {
       this.audioContext = audioContext;
@@ -34,7 +32,6 @@ export class AudioManager {
     }
 
     public async createAudioContext(audioContext : AudioContext, name: string, url: string) {
-
         const response = await fetch(url);
         const audioData = await response.arrayBuffer();
         const audioBuffer = await audioContext.decodeAudioData(audioData);
@@ -56,39 +53,5 @@ export class AudioManager {
         source.start();
       }
     }
-
-    playPauseMainMusic() : void {
-
-      console.warn("Entratooosfodof");
-      
-      if(this.isPlaying) {
-        this.audioBufferMap.get("mainMusic");
-        this.isPlaying = false;
-      }
-      else {
-        this.playSound("mainMusic");
-        this.isPlaying = true;
-      }
-
-    }
-
-    public setEffect() {
-      // panning
-      /*
-      const pannerOptions = {pan: 0};
-      const panner = new StereoPannerNode(audioCtx, pannerOptions);
-
-      const pannerControl = document.querySelector('[data-action="panner"]');
-      pannerControl.addEventListener('input', function() {
-        panner.pan.value = this.value;	
-      }, false);
-
-      // connect our graph
-      track.connect(gainNode).connect(panner).connect(audioCtx.destination);
-      */
-    }
-
-
-  
   }
   

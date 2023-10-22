@@ -1,67 +1,22 @@
 import React, { useState, useEffect } from "react";
 import RegionsPlugin from 'wavesurfer.js/src/plugin/regions';
-import './GestureController.css';
 import 'bootstrap/dist/css/bootstrap.css';
+
 import { GestureRecognizer, FilesetResolver, DrawingUtils } from '../../node_modules/@mediapipe/tasks-vision';
+import { CutState, PlayPauseState, IndexState, MiddleState, RingState, PickyState, VolumeState, EffectsState } from "../utils/GesturesFSM";
 import { AudioManager } from "../AudioManager";
-//import IconsUI from "../IconsUI";
-import VolumeProgressBar from "../components/volumeProgressBar";
+import VolumeProgressBar from "../components/VolumeProgressBar";
 import WaveSurfer from "wavesurfer.js";
+
 
 export interface Coordinates {
     x: number;
     y: number;
 }
 
-enum CutState {
-    Empty = "empty",
-    StartCuttingLeft = "startCuttingLeft",
-    ClosedCutLeft = "closedCutLeft",
-    CuttedLeft = "cuttedLeft",
-    StartCuttingRight = "startCuttingRight",
-    ClosedCutRight = "closedCutRight",
-    CuttedCompleted = "cuttedCompleted"
-}
-
-enum PlayPauseState {
-    Empty = "empty",
-    Started = "started",
-    Completed = "completed"
-}
-
-enum IndexState {
-    Listening = "listen",
-    Stopping = "stop"
-}
-
-enum MiddleState {
-    Listening = "listen",
-    Stopping = "stop"
-}
-
-enum RingState {
-    Listening = "listen",
-    Stopping = "stop"
-}
-
-enum PickyState {
-    Listening = "listen",
-    Stopping = "stop"
-}
-
-enum VolumeState {
-    Empty = "empty",
-    Started = "startedManagingVolume"
-}
-
-enum EffectsState {
-    Empty = "empty",
-    StartPuttingEffects = "startPuttingEffects",
-}
-
 interface GestureControllerProps {
     video: HTMLVideoElement | null,
-    waveform : WaveSurfer | null
+    waveform: WaveSurfer | null
 }
 
 const GestureController = (props: GestureControllerProps) => {
@@ -69,11 +24,12 @@ const GestureController = (props: GestureControllerProps) => {
     // Define a sensitivity value to control effect change speed
     var video = props.video;
     var waveform = props.waveform;
-    var gestureRecognizer : GestureRecognizer | null = null;
-    //var gestureOutput : any | null = null;
-    var canvasElement : any | null = null;
-    var canvasCtx : any | null = null;
+    var gestureRecognizer: GestureRecognizer | null = null;
     
+    //var gestureOutput : any | null = null;
+    var canvasElement: any | null = null;
+    var canvasCtx: any | null = null;
+
     var currSPlayPause: PlayPauseState = PlayPauseState.Empty;
     var currSCut: CutState = CutState.Empty;
     var currSIndex: IndexState = IndexState.Listening;
@@ -85,85 +41,82 @@ const GestureController = (props: GestureControllerProps) => {
 
     var results: any = undefined;
     var loopRegion: any = undefined;
-    var canvasCtx: any = undefined;
     var wsRegions: any = undefined;
-
-    var results : any | null = null;
 
     const videoHeight = "100vh";
     const videoWidth = "auto";
 
-    var volumeTimer : any = null;
+    var volumeTimer: any = null;
 
     const soundManager: AudioManager = new AudioManager();
-    
+
     const [volume, setVolume] = useState<number>(50);
     const [isVolumeVisible, setIsVolumeVisible] = useState<boolean>(false);
-    var speedValue : number = 1;
+    var speedValue: number = 1;
 
-    var lastVideoTime : any = -1;
+    var lastVideoTime: any = -1;
 
-    var songs : any = ["audio.mp3", "audio_techno.mp3", "audio_original.mp3"];
-    var currentSong : number = 0;
+    var songs: any = ["audio.mp3", "audio_techno.mp3", "audio_original.mp3"];
+    var currentSong: number = 0;
 
     if ('webkitSpeechRecognition' in window) {
         const recognition = new (window as any).webkitSpeechRecognition();
-    
+
         recognition.continuous = true; // Continuously listen for commands
         recognition.interimResults = false;
         recognition.onresult = (event: any) => {
-          const current = event.resultIndex;
-          const transcript = event.results[current][0].transcript.trim();
-          let current_voice = document.getElementById('current_voice') as HTMLOutputElement;
-          current_voice.innerText = "🎙️ " + transcript;
-          switch (transcript.toLowerCase().trim()) {
-            case 'start':
-            case 'play':
-              if (!waveform?.isPlaying()) { 
-                waveform?.playPause(); 
-                current_voice.innerText = "🎙️ Play ▶️ ✅";
+            const current = event.resultIndex;
+            const transcript = event.results[current][0].transcript.trim();
+            let current_voice = document.getElementById('current_voice') as HTMLOutputElement;
+            current_voice.innerText = "🎙️ " + transcript;
+            switch (transcript.toLowerCase().trim()) {
+                case 'start':
+                case 'play':
+                    if (!waveform?.isPlaying()) {
+                        waveform?.playPause();
+                        current_voice.innerText = "🎙️ Play ▶️ ✅";
+                    }
+                    break;
+                case 'pause':
+                case 'stop':
+                    if (waveform?.isPlaying()) {
+                        waveform?.playPause();
+                        current_voice.innerText = "🎙️ Pause ⏹️ ✅";
+                    }
+                    break;
+                case 'repeat':
+                case 'loop':
+                    waveform?.setCurrentTime(0);
+                    current_voice.innerText = "🎙️ Playback 🔁 ✅";
+                    break;
+                case 'next':
+                    currentSong = (currentSong + 1) % songs.length;
+                    console.log("Next song: " + songs[currentSong]);
+                    waveform?.load("assets/sounds/" + songs[currentSong]);
+                    waveform?.on('ready', () => {
+                        waveform?.play();
+                    });
+                    current_voice.innerText = "🎙️ New Track ✅";
+                    break;
             }
-              break;
-            case 'pause':
-            case 'stop':
-              if (waveform?.isPlaying()) { 
-                waveform?.playPause(); 
-                current_voice.innerText = "🎙️ Pause ⏹️ ✅";
-            }
-              break;
-            case 'repeat':
-            case 'loop':
-                waveform?.setCurrentTime(0);
-                current_voice.innerText = "🎙️ Playback 🔁 ✅";
-              break;
-            case 'next':
-                currentSong = (currentSong + 1) % songs.length;
-                console.log("Next song: " + songs[currentSong]);
-                waveform?.load("assets/sounds/" + songs[currentSong]);
-                waveform?.on('ready', () => {
-                    waveform?.play();
-                });
-                current_voice.innerText = "🎙️ New Track ✅";
-              break;
-          }
         };
         recognition.start();
-      }
-    //First functions that has to be excecuted just at the first render
+    }
+
+    // First functions that has to be excecuted just at the first render
     useEffect(() => {
         setAudioObjects();
     }, [])
 
-    //Excecuted every time the video or the waveForm change
+    // Excecuted every time the video or the waveForm change
     useEffect(() => {
-        if (video && waveform) {    
+        if (video && waveform) {
             createGestureRecognizer().then(() => {
                 video?.addEventListener("loadeddata", predictWebcam);
                 window.requestAnimationFrame(predictWebcam.bind(this));
             });
-            setAudioObjects();
         }
-        
+
     }, [video, waveform]);
 
     // Add other useEffect hooks as needed
@@ -222,22 +175,16 @@ const GestureController = (props: GestureControllerProps) => {
 
     const setAudioObjects = () => {
         // Load audio files
-        // audioManager.loadSound('mainMusic', 'assets/sounds/audio.mp3');
-        // audioManager.loadSound('bassdrum', 'assets/sounds/bassdrum.mp3');
-        // audioManager.loadSound('snare', 'assets/sounds/dubstep-snare-drum.mp3');
-        // audioManager.loadSound('electribe', 'assets/sounds/electribe-hats.mp3');
-        // audioManager.loadSound('clap', 'assets/sounds/mega-clap.mp3');
-
         soundManager.loadSound('mainMusic', 'assets/sounds/audio.mp3')
         soundManager.loadSound('bassdrum', 'assets/sounds/kick.wav');
         soundManager.loadSound('snare', 'assets/sounds/snare.wav');
         soundManager.loadSound('hat', 'assets/sounds/hat.wav');
         soundManager.loadSound('clap', 'assets/sounds/clap.wav');
-        
+
     }
 
     const setupCanvas = () => {
-        if (canvasCtx == undefined) { 
+        if (canvasCtx == undefined) {
             canvasElement = document.getElementById("output_canvas") as HTMLCanvasElement;
             canvasCtx = canvasElement.getContext("2d");
             canvasElement.style.height = videoHeight;
@@ -273,7 +220,7 @@ const GestureController = (props: GestureControllerProps) => {
 
         //In modalità doppia mano non ferma la musica
 
-        if(results.gestures.length == 0) {
+        if (results.gestures.length == 0) {
             let current_gesture = document.getElementById('current_gesture') as HTMLOutputElement;
             current_gesture.innerText = "🙌";
         }
@@ -318,7 +265,7 @@ const GestureController = (props: GestureControllerProps) => {
                 break;
             case "Pointing_Up":
                 currSPlayPause = PlayPauseState.Empty;
-                if(currSCut != CutState.Empty) {
+                if (currSCut != CutState.Empty) {
                     wsRegions.clearRegions();
                     currSCut = CutState.Empty;
                 }
@@ -327,7 +274,7 @@ const GestureController = (props: GestureControllerProps) => {
                 currSRing = RingState.Stopping;
                 currSPincky = PickyState.Stopping;
                 currSEffects = EffectsState.Empty;
-                if(handedness == "Right") {
+                if (handedness == "Right") {
                     currSVolume = VolumeState.Started;
                     current_gesture.innerText = "👆 + ↔️ → Down 🔈 ↔️ 🔊 Up";
                 }
@@ -337,7 +284,7 @@ const GestureController = (props: GestureControllerProps) => {
                     currSPlayPause = PlayPauseState.Started;
                     current_gesture.innerText = "🖐️ + ✊ → ⏯️";
                 }
-                if(currSCut != CutState.Empty) {
+                if (currSCut != CutState.Empty) {
                     wsRegions.clearRegions();
                     currSCut = CutState.Empty;
                 }
@@ -351,13 +298,13 @@ const GestureController = (props: GestureControllerProps) => {
             case "Closed_Fist":
                 if (handedness == "Right") {
 
-                    if(currSPlayPause == PlayPauseState.Started) {
+                    if (currSPlayPause == PlayPauseState.Started) {
                         currSPlayPause = PlayPauseState.Completed;
                         current_gesture.innerText = "⏯️ ✅";
                     }
-                    
+
                 }
-                if(currSCut != CutState.Empty) {
+                if (currSCut != CutState.Empty) {
                     wsRegions.clearRegions();
                     currSCut = CutState.Empty;
                 }
@@ -380,7 +327,7 @@ const GestureController = (props: GestureControllerProps) => {
                     case CutState.Empty:
                         if (handedness == "Left") {
                             currSCut = CutState.StartCuttingLeft;
-                            if(wsRegions != undefined) {
+                            if (wsRegions != undefined) {
                                 wsRegions.clearRegions();
                             }
                             loopRegion = undefined;
@@ -405,7 +352,7 @@ const GestureController = (props: GestureControllerProps) => {
                 break;
             case "Thumb_Up":
                 currSPlayPause = PlayPauseState.Empty;
-                if(currSCut != CutState.Empty) {
+                if (currSCut != CutState.Empty) {
                     wsRegions.clearRegions();
                     currSCut = CutState.Empty;
                 }
@@ -421,7 +368,7 @@ const GestureController = (props: GestureControllerProps) => {
                 break;
             case "Thumb_Down":
                 currSPlayPause = PlayPauseState.Empty;
-                if(currSCut != CutState.Empty) {
+                if (currSCut != CutState.Empty) {
                     wsRegions.clearRegions();
                     currSCut = CutState.Empty;
                 }
@@ -434,7 +381,7 @@ const GestureController = (props: GestureControllerProps) => {
                 break;
             case "ILoveYou":
                 currSPlayPause = PlayPauseState.Empty;
-                if(currSCut != CutState.Empty) {
+                if (currSCut != CutState.Empty) {
                     wsRegions.clearRegions();
                     currSCut = CutState.Empty;
                 }
@@ -471,17 +418,17 @@ const GestureController = (props: GestureControllerProps) => {
                 break;
         }
     }
-        
 
-    const handleDrums = (handedness : string, landmarks: any) => {
+
+    const handleDrums = (handedness: string, landmarks: any) => {
         let current_gesture = document.getElementById('current_gesture') as HTMLOutputElement;
 
         //DRUMS detect and managing
-        if(handedness == "Left") {
+        if (handedness == "Left") {
             //Audio to put in async to play them without overriding everything (?)
             //Index finger action
-            if(closedPoints(landmarks[8], landmarks[4], 0.05)) {
-                if(currSIndex == IndexState.Listening) {
+            if (closedPoints(landmarks[8], landmarks[4], 0.05)) {
+                if (currSIndex == IndexState.Listening) {
                     // Play the audio in the background
                     soundManager.playSound('bassdrum');
                     current_gesture.innerText = "🥁 ✅";
@@ -492,8 +439,8 @@ const GestureController = (props: GestureControllerProps) => {
             }
 
             //Middle finger action
-            if(closedPoints(landmarks[12], landmarks[4], 0.05)) {
-                if(currSMiddle == MiddleState.Listening) {
+            if (closedPoints(landmarks[12], landmarks[4], 0.05)) {
+                if (currSMiddle == MiddleState.Listening) {
                     // Play the audio in the background
                     soundManager.playSound('snare');
                     current_gesture.innerText = "🥁 ✅";
@@ -505,24 +452,24 @@ const GestureController = (props: GestureControllerProps) => {
 
             //Ring finger action
             if (closedPoints(landmarks[16], landmarks[4], 0.05)) {
-                if(currSRing == RingState.Listening) {
+                if (currSRing == RingState.Listening) {
                     // Play the audio in the background
                     soundManager.playSound('clap');
                     current_gesture.innerText = "🥁 ✅";
                     currSRing = RingState.Stopping;
-                }   
+                }
             } else {
                 currSRing = RingState.Listening;
             }
 
             //Pinky Finger action
             if (closedPoints(landmarks[20], landmarks[4], 0.05)) {
-                if(currSPincky == PickyState.Listening) {
+                if (currSPincky == PickyState.Listening) {
                     // Play sounds
                     soundManager.playSound('hat');
                     current_gesture.innerText = "👏 ✅";
                     currSPincky = PickyState.Stopping;
-                }  
+                }
             } else {
                 currSPincky = PickyState.Listening;
             }
@@ -536,18 +483,18 @@ const GestureController = (props: GestureControllerProps) => {
         }
     }
 
-    const handleEffects = (handedness : string, landmarks: any) => {
+    const handleEffects = (handedness: string, landmarks: any) => {
 
-        if(currSEffects == EffectsState.StartPuttingEffects && handedness == "Right") {
+        if (currSEffects == EffectsState.StartPuttingEffects && handedness == "Right") {
             //Manage effects
-            var currentThumbUpCoordinates = {x:landmarks[4].x, y: landmarks[4].y};
-            var referencePoint = {x:landmarks[0].x, y: landmarks[0].y}
+            var currentThumbUpCoordinates = { x: landmarks[4].x, y: landmarks[4].y };
+            var referencePoint = { x: landmarks[0].x, y: landmarks[0].y }
             updateEffectsValue(currentThumbUpCoordinates!, referencePoint!);
             let current_gesture = document.getElementById('current_gesture') as HTMLOutputElement;
             current_gesture.innerText = "👍 + 🔄 → Speed: " + speedValue.toFixed(2) + "x";
             waveform?.setPlaybackRate(speedValue);
         }
-        else if(handedness == "Right") {
+        else if (handedness == "Right") {
             speedValue = 1;
         }
 
@@ -578,18 +525,18 @@ const GestureController = (props: GestureControllerProps) => {
         }
     }
 
-    const handleVolume = (landmarks : any) => {
+    const handleVolume = (landmarks: any) => {
 
-        if(currSVolume == VolumeState.Started) {
-            
-            let currentVolume : number = 1-landmarks[8].x;
+        if (currSVolume == VolumeState.Started) {
 
-            setVolume(Math.min(100, parseFloat((currentVolume*100).toFixed(0))));
+            let currentVolume: number = 1 - landmarks[8].x;
+
+            setVolume(Math.min(100, parseFloat((currentVolume * 100).toFixed(0))));
             setIsVolumeVisible(true);
             waveform?.setVolume(currentVolume);
 
             //To let finish the Timeout only when the the user changes gesture
-            if(volumeTimer != null) {
+            if (volumeTimer != null) {
                 clearTimeout(volumeTimer);
             }
             volumeTimer = setTimeout(() => {
@@ -603,14 +550,14 @@ const GestureController = (props: GestureControllerProps) => {
      * Function to update the effect factor based on the angle taken by the Thumb_Up gesture
      */
     const updateEffectsValue = (point1: Coordinates, point2: Coordinates) => {
-        var angle : number = 0;
+        var angle: number = 0;
 
         angle = calculateAngle(point1, point2);
 
-        speedValue = angle/100;
+        speedValue = angle / 100;
 
         console.warn("EFFECTIVE VALUE: " + speedValue);
-        
+
     };
 
     const calculateAngle = (coord1: Coordinates, coord2: Coordinates) => {
@@ -643,7 +590,7 @@ const GestureController = (props: GestureControllerProps) => {
             <p className="tooltipVoice">Voice commands</p>
             <p id='current_gesture' className="currGesture">🙌</p>
             <p className="tooltipGesture">Current gesture</p>
-            <div className="volumeProgressBar" style={{ display: isVolumeVisible ? "block" : "none"}}>
+            <div className="volumeProgressBar" style={{ display: isVolumeVisible ? "block" : "none" }}>
                 <VolumeProgressBar volume={volume}></VolumeProgressBar>
             </div>
         </>

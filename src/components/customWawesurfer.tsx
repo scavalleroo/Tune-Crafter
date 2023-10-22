@@ -5,23 +5,20 @@ interface WaveformProps {
   audioUrl: string;
 }
 
-//Function class
 const Waveform = React.forwardRef<WaveSurfer | null, WaveformProps>(
-  ({ audioUrl }, ref) => {
+  ({audioUrl}, ref) => {
     const wavesurferRef = useRef<WaveSurfer | null>(null);
 
     useEffect(() => {
       const wavesurfer = WaveSurfer.create({
         container: '#waveform',
         backend: 'WebAudio',
-        // waveColor: '#A011A7',
         waveColor: '#B01EB0',
         progressColor: '#0B060E',
         cursorColor: '#F5F5F5',
         cursorWidth: 3,
       });
-      
-      console.log("audioUrl -> ", audioUrl);
+
       wavesurfer.load(audioUrl);
       wavesurferRef.current = wavesurfer;
 
