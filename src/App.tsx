@@ -1,12 +1,13 @@
 import React, { useRef, useEffect, useState, Ref } from "react";
 import { hasGetUserMedia } from './utils/helpers';
-import { HeartRateComponent } from './components/HeartRateComponent';
-import GestureController from "./controllers/GestureController";
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.css';
-
 import { WaveSurfer } from 'wavesurfer-react/dist/utils/createWavesurfer';
-import Waveform from "./components/CustomWawesurfer";
+
+import { HeartRateComponent } from './components/HeartRateComponent';
+import GestureComponent from "./components/GestureComponent";
+import AudioWaveComponent from "./components/AudioWaveComponent";
+import SpeechComponent from "./components/SpeechComponent";
 
 function App() {
   let audioUrl = "assets/sounds/audio.mp3"
@@ -44,10 +45,11 @@ function App() {
       <section className="main-cont">
         <HeartRateComponent />
         <div className="waveForm">
-          <Waveform ref={waveformRef} audioUrl={audioUrl} />
+          <AudioWaveComponent ref={waveformRef} audioUrl={audioUrl} />
         </div>
         <video id="webcam" autoPlay playsInline style={{ display: "none" }}></video>
-        <GestureController video={video} waveform={waveformRef.current}></GestureController>
+        <GestureComponent video={video} waveform={waveformRef.current}></GestureComponent>
+        <SpeechComponent waveform={waveformRef.current}></SpeechComponent>
       </section>
     </>
   )

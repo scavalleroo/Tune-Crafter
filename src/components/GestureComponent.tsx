@@ -4,22 +4,21 @@ import 'bootstrap/dist/css/bootstrap.css';
 
 import { GestureRecognizer, FilesetResolver, DrawingUtils } from '../../node_modules/@mediapipe/tasks-vision';
 import { AudioManager } from "../AudioManager";
-import VolumeProgressBar from "../components/VolumeProgressBar";
+import VolumeProgressBar from "./VolumeProgressBar";
 import WaveSurfer from "wavesurfer.js";
-import { GestureModel } from "./GestureModel";
-
+import { GestureModel } from "../models/GestureModel";
 
 export interface Coordinates {
     x: number;
     y: number;
 }
 
-interface GestureControllerProps {
+interface GestureComponentProps {
     video: HTMLVideoElement | null,
     waveform: WaveSurfer | null
 }
 
-const GestureController = (props: GestureControllerProps) => {
+const GestureComponent = (props: GestureComponentProps) => {
     // Define a sensitivity value to control effect change speed
     var video = props.video;
     var waveform = props.waveform;
@@ -39,54 +38,9 @@ const GestureController = (props: GestureControllerProps) => {
     const [isVolumeVisible, setIsVolumeVisible] = useState<boolean>(false);
     var lastVideoTime: any = -1;
 
-    // First functions that has to be excecuted just at the first render
-    useEffect(() => {
-        if ('webkitSpeechRecognition' in window) {
-            const recognition = new (window as any).webkitSpeechRecognition();
-
-            recognition.continuous = true; // Continuously listen for commands
-            recognition.interimResults = false;
-            recognition.onresult = (event: any) => {
-                const current = event.resultIndex;
-                const transcript = event.results[current][0].transcript.trim();
-                let current_voice = document.getElementById('current_voice') as HTMLOutputElement;
-                current_voice.innerText = "🎙️ " + transcript;
-                switch (transcript.toLowerCase().trim()) {
-                    case 'start':
-                    case 'play':
-                        if (!waveform?.isPlaying()) {
-                            waveform?.playPause();
-                            current_voice.innerText = "🎙️ Play ▶️ ✅";
-                        }
-                        break;
-                    case 'pause':
-                    case 'stop':
-                        if (waveform?.isPlaying()) {
-                            waveform?.playPause();
-                            current_voice.innerText = "🎙️ Pause ⏹️ ✅";
-                        }
-                        break;
-                    case 'repeat':
-                    case 'loop':
-                        waveform?.setCurrentTime(0);
-                        current_voice.innerText = "🎙️ Playback 🔁 ✅";
-                        break;
-                    case 'next':
-                        model.nextSong();
-                        waveform?.load("assets/sounds/" + model.getCurrentSong());
-                        waveform?.on('ready', () => {
-                            waveform?.play();
-                        });
-                        current_voice.innerText = "🎙️ New Track ✅";
-                        break;
-                }
-            };
-            recognition.start();
-        }
-    }, []);
-
     // Excecuted every time the video or the waveForm change
     useEffect(() => {
+        console.log("Video: " + video); 
         if (video && waveform && gestureRecognizer == null) {
             createGestureRecognizer().then(() => {
                 video?.addEventListener("loadeddata", predictWebcam);
@@ -112,7 +66,7 @@ const GestureController = (props: GestureControllerProps) => {
             console.error(error);
         }
 
-        if (model.haveRegions()) {
+        if (!model.haveRegions()) {
             const regions = waveform?.addPlugin(RegionsPlugin.create({}));
             regions?.on('region-created', (region: any) => {
                 if (region.loop) {
@@ -173,7 +127,7 @@ const GestureController = (props: GestureControllerProps) => {
 
     const drawHands = () => {
         const drawingUtils = new DrawingUtils(canvasCtx);
-        if (results.landmarks) {
+        if (results && results.landmarks) {
             for (const landmarks of results.landmarks) {
                 drawingUtils.drawConnectors(
                     landmarks,
@@ -193,7 +147,7 @@ const GestureController = (props: GestureControllerProps) => {
     }
 
     const performAction = () => {
-        if (results.gestures.length == 0) {
+        if (results && results.gestures.length == 0) {
             let current_gesture = document.getElementById('current_gesture') as HTMLOutputElement;
             current_gesture.innerText = "🙌";
         }
@@ -248,7 +202,7 @@ const GestureController = (props: GestureControllerProps) => {
 
     const handleEffects = (handedness: string, landmarks: any) => {
         let speedText = model.getSpeedText(landmarks, handedness);
-        if(speedText) {
+        if (speedText) {
             let current_gesture = document.getElementById('current_gesture') as HTMLOutputElement;
             current_gesture.innerText = speedText;
             waveform?.setPlaybackRate(model.getSpeedValue());
@@ -256,7 +210,7 @@ const GestureController = (props: GestureControllerProps) => {
     }
 
     const handleRegions = () => {
-        if(waveform) {
+        if (waveform) {
             model.handleLoopRegions(waveform.getCurrentTime());
         }
     }
@@ -284,8 +238,6 @@ const GestureController = (props: GestureControllerProps) => {
             <div>
                 <canvas className="output_canvas" id="output_canvas" width="1280" height="720">  </canvas>
             </div>
-            <p id='current_voice' className="currVoice">🎙️</p>
-            <p className="tooltipVoice">Voice commands</p>
             <p id='current_gesture' className="currGesture">🙌</p>
             <p className="tooltipGesture">Current gesture</p>
             <div className="volumeProgressBar" style={{ display: isVolumeVisible ? "block" : "none" }}>
@@ -295,4 +247,4 @@ const GestureController = (props: GestureControllerProps) => {
     );
 };
 
-export default GestureController;
+export default GestureComponent;

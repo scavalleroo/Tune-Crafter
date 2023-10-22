@@ -1,6 +1,6 @@
 import { PlayPauseState, CutState, IndexState, MiddleState, RingState, PickyState, VolumeState, EffectsState } from "../utils/GesturesFSM";
 import { calculateAngle, closedPoints } from "../utils/helpers";
-import { Coordinates } from "./GestureController";
+import { Coordinates } from "../components/GestureComponent";
 
 export class GestureModel {
     currSPlayPause: PlayPauseState = PlayPauseState.Empty;
@@ -12,21 +12,10 @@ export class GestureModel {
     currSVolume: VolumeState = VolumeState.Empty;
     currSEffects: EffectsState = EffectsState.Empty;
 
-    songs: any = ["audio.mp3", "audio_techno.mp3", "audio_original.mp3"];
-    currentSong: number = 0;
     speedValue: number = 1;
 
     loopRegion: any = undefined;
     wsRegions: any = undefined;
-
-    nextSong() {
-        this.currentSong = (this.currentSong + 1) % this.songs.length;
-        console.log("Next song: " + this.songs[this.currentSong]);
-    }
-
-    getCurrentSong() {
-        return this.songs[this.currentSong];
-    }
     
     haveRegions() {
         return this.wsRegions != undefined;

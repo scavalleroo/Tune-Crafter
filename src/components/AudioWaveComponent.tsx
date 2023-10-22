@@ -5,7 +5,7 @@ interface WaveformProps {
   audioUrl: string;
 }
 
-const Waveform = React.forwardRef<WaveSurfer | null, WaveformProps>(
+const AudioWaveComponent = React.forwardRef<WaveSurfer | null, WaveformProps>(
   ({audioUrl}, ref) => {
     const wavesurferRef = useRef<WaveSurfer | null>(null);
 
@@ -49,4 +49,4 @@ const Waveform = React.forwardRef<WaveSurfer | null, WaveformProps>(
   }
 );
 
-export default Waveform;
+export default AudioWaveComponent;

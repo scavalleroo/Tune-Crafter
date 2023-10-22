@@ -1,4 +1,4 @@
-import { Coordinates } from "../controllers/GestureController";
+import { Coordinates } from "../components/GestureComponent";
 
 // Check if webcam access is supported.
 export function hasGetUserMedia() {
