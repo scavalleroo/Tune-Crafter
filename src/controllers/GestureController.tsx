@@ -59,70 +59,68 @@ const GestureController = (props: GestureControllerProps) => {
     var songs: any = ["audio.mp3", "audio_techno.mp3", "audio_original.mp3"];
     var currentSong: number = 0;
 
-    if ('webkitSpeechRecognition' in window) {
-        const recognition = new (window as any).webkitSpeechRecognition();
-
-        recognition.continuous = true; // Continuously listen for commands
-        recognition.interimResults = false;
-        recognition.onresult = (event: any) => {
-            const current = event.resultIndex;
-            const transcript = event.results[current][0].transcript.trim();
-            let current_voice = document.getElementById('current_voice') as HTMLOutputElement;
-            current_voice.innerText = "🎙️ " + transcript;
-            switch (transcript.toLowerCase().trim()) {
-                case 'start':
-                case 'play':
-                    if (!waveform?.isPlaying()) {
-                        waveform?.playPause();
-                        current_voice.innerText = "🎙️ Play ▶️ ✅";
-                    }
-                    break;
-                case 'pause':
-                case 'stop':
-                    if (waveform?.isPlaying()) {
-                        waveform?.playPause();
-                        current_voice.innerText = "🎙️ Pause ⏹️ ✅";
-                    }
-                    break;
-                case 'repeat':
-                case 'loop':
-                    waveform?.setCurrentTime(0);
-                    current_voice.innerText = "🎙️ Playback 🔁 ✅";
-                    break;
-                case 'next':
-                    currentSong = (currentSong + 1) % songs.length;
-                    console.log("Next song: " + songs[currentSong]);
-                    waveform?.load("assets/sounds/" + songs[currentSong]);
-                    waveform?.on('ready', () => {
-                        waveform?.play();
-                    });
-                    current_voice.innerText = "🎙️ New Track ✅";
-                    break;
-            }
-        };
-        recognition.start();
-    }
-
     // First functions that has to be excecuted just at the first render
     useEffect(() => {
+        if ('webkitSpeechRecognition' in window) {
+            const recognition = new (window as any).webkitSpeechRecognition();
+    
+            recognition.continuous = true; // Continuously listen for commands
+            recognition.interimResults = false;
+            recognition.onresult = (event: any) => {
+                const current = event.resultIndex;
+                const transcript = event.results[current][0].transcript.trim();
+                let current_voice = document.getElementById('current_voice') as HTMLOutputElement;
+                current_voice.innerText = "🎙️ " + transcript;
+                switch (transcript.toLowerCase().trim()) {
+                    case 'start':
+                    case 'play':
+                        if (!waveform?.isPlaying()) {
+                            waveform?.playPause();
+                            current_voice.innerText = "🎙️ Play ▶️ ✅";
+                        }
+                        break;
+                    case 'pause':
+                    case 'stop':
+                        if (waveform?.isPlaying()) {
+                            waveform?.playPause();
+                            current_voice.innerText = "🎙️ Pause ⏹️ ✅";
+                        }
+                        break;
+                    case 'repeat':
+                    case 'loop':
+                        waveform?.setCurrentTime(0);
+                        current_voice.innerText = "🎙️ Playback 🔁 ✅";
+                        break;
+                    case 'next':
+                        currentSong = (currentSong + 1) % songs.length;
+                        console.log("Next song: " + songs[currentSong]);
+                        waveform?.load("assets/sounds/" + songs[currentSong]);
+                        waveform?.on('ready', () => {
+                            waveform?.play();
+                        });
+                        current_voice.innerText = "🎙️ New Track ✅";
+                        break;
+                }
+            };
+            recognition.start();
+        }
+
+        createGestureRecognizer();
         setAudioObjects();
     }, [])
 
     // Excecuted every time the video or the waveForm change
     useEffect(() => {
-        if (video && waveform) {
+        if (gestureRecognizer && video && waveform) {
             createGestureRecognizer().then(() => {
                 video?.addEventListener("loadeddata", predictWebcam);
                 window.requestAnimationFrame(predictWebcam.bind(this));
             });
         }
-
     }, [video, waveform]);
 
     // Add other useEffect hooks as needed
-
     const createGestureRecognizer = async () => {
-
         const vision = await FilesetResolver.forVisionTasks("../../node_modules/@mediapipe/tasks-vision/wasm");
         const recognizer = await GestureRecognizer.createFromOptions(vision, {
             baseOptions: {
@@ -132,7 +130,6 @@ const GestureController = (props: GestureControllerProps) => {
             runningMode: "VIDEO"
         });
         gestureRecognizer = recognizer;
-        //setGestureRecognizer(recognizer);
 
         if (wsRegions == null) {
             const regions = waveform?.addPlugin(RegionsPlugin.create({}));
@@ -153,13 +150,11 @@ const GestureController = (props: GestureControllerProps) => {
             });
             wsRegions = regions;
         }
-    };
+    }
 
     const predictWebcam = () => {
-
         // Now let's start detecting the stream.
         if (gestureRecognizer) {
-
             setupCanvas();
             let nowInMs = Date.now();
             if (video?.currentTime !== lastVideoTime) {
@@ -217,9 +212,6 @@ const GestureController = (props: GestureControllerProps) => {
     }
 
     const performAction = () => {
-
-        //In modalità doppia mano non ferma la musica
-
         if (results.gestures.length == 0) {
             let current_gesture = document.getElementById('current_gesture') as HTMLOutputElement;
             current_gesture.innerText = "🙌";
@@ -231,9 +223,7 @@ const GestureController = (props: GestureControllerProps) => {
                 (results.gestures[i][0].score * 100).toString()
             ).toFixed(2);
             const handedness = results.handednesses[i][0].displayName;
-
-            //gestureOutput.innerText = "Cut State " + currSCut;
-
+            
             detectAction(categoryName, categoryScore, handedness, results.landmarks[i]);
             handleDrums(handedness, results.landmarks[i]);
             handlePlayPause();
