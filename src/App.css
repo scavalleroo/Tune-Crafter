@@ -9,22 +9,28 @@ video {
   height: 280px;
 }
 
-body, html {
+body,
+html {
   margin: 0;
   padding: 0;
-  overflow: hidden; /* Prevent scrolling */
+  overflow: hidden;
+  /* Prevent scrolling */
   height: 100%;
   width: 100%;
-  background-image: url("/public/assets/images/backgroundTuneCrafter.jpg");
+  background: url("/public/assets/images/background.png") no-repeat center center fixed;
+  background-size: cover;
 }
 
+
 .main-cont {
-  height: 100vh; /* 100% of the viewport height */
-  width: 100vw; /* 100% of the viewport width */
+  height: 100vh;
+  /* 100% of the viewport height */
+  width: 100vw;
+  /* 100% of the viewport width */
 }
 
 .waveForm {
-  width: 80%;
+  width: 65%;
   margin: 0 auto;
 }
 
@@ -94,4 +100,79 @@ body, html {
 
 .detectOnClick img {
   width: 45vw;
+}
+
+.hb-text {
+  position: absolute;
+  text-align: center;
+  padding: 5px;
+  color: black;
+  bottom: 40px;
+  position: absolute;
+  left: 50%;
+  /* position the left edge of the element at the middle of the parent */
+  transform: translate(-50%, -50%);
+  background: white;
+  font-size: 14px;
+  border-radius: 10px;
+}
+
+.currGesture {
+  font-size: 18px;
+  font-weight: bold;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  position: absolute;
+  top: 210px;
+  background: white;
+  padding: 10px;
+  border-radius: 20px;
+}
+
+.tooltipGesture {
+  color: lightgrey;
+  font-size: 14px;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  position: absolute;
+  top: 210px;
+  margin-top: 40px;
+}
+
+.currVoice {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  margin-top: 25px;
+  background: white;
+  padding: 10px;
+  border-radius: 10px;
+  max-width: 200px;
+  width: auto;
+  color: black;
+  font-size: 16px;
+}
+
+.tooltipVoice {
+  color: lightgrey;
+  font-size: 14px;
+  top: 10px;
+  left: 10px;
+  position: absolute;
+}
+
+.ebony {
+  color: #0B060E;
+}
+
+.violet {
+  color: #B01EB0;
+}
+
+.loulou {
+  color: #5A0955;
+}
+
+.purple {
+  color: #7A0B85;
 }

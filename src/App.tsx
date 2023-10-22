@@ -1,23 +1,27 @@
 import React, { useRef, useEffect, useState, Ref } from "react";
 import { hasGetUserMedia } from './utils/helpers';
 import GestureController from "./controllers/GestureController";
-
+import { AudioManager } from "./AudioManager";
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.css';
+
 import { WaveSurfer } from 'wavesurfer-react/dist/utils/createWavesurfer';
 import { HartRateComponent } from "./components/HartRateComponent";
 import Waveform from "./components/CustomWawesurfer";
 
 function App() {
 
-  const waveformRef : Ref<WaveSurfer> | null = useRef<WaveSurfer | null>(null);
+  const waveformRef: Ref<WaveSurfer> | null = useRef<WaveSurfer | null>(null);
 
   let audioUrl = 'assets/sounds/audio.mp3';
-
-  const[video, setVideo] = useState<HTMLVideoElement | null>(null); 
+  const audioManager = new AudioManager();
+  audioManager.loadSound('snare', 'assets/sounds/dubstep-snare-drum.mp3');
+  audioManager.loadSound('electribe', 'assets/sounds/electribe-hats.mp3');
+  audioManager.loadSound('clap', 'assets/sounds/mega-clap.mp3');
+  const [video, setVideo] = useState<HTMLVideoElement | null>(null);
+  // Check if the browser supports the WebSpeech API
 
   useEffect(() => {
-
     if (hasGetUserMedia()) {
       // Enabling webcam
       enableCam();
@@ -33,8 +37,8 @@ function App() {
     navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
 
       setVideo(document.getElementById("webcam") as HTMLVideoElement);
-      
-      if(video != null) {
+
+      if (video != null) {
         video.srcObject = stream;
       }
     });

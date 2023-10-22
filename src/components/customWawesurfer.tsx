@@ -14,12 +14,14 @@ const Waveform = React.forwardRef<WaveSurfer | null, WaveformProps>(
       const wavesurfer = WaveSurfer.create({
         container: '#waveform',
         backend: 'WebAudio',
-        waveColor: '#A011A7', 
-        progressColor: '#e875f0',
-        audioRate: 1, // set the initial playback rate
-        //audioContext:
+        // waveColor: '#A011A7',
+        waveColor: '#B01EB0',
+        progressColor: '#0B060E',
+        cursorColor: '#F5F5F5',
+        cursorWidth: 3,
       });
-
+      
+      console.log("audioUrl -> ", audioUrl);
       wavesurfer.load(audioUrl);
       wavesurferRef.current = wavesurfer;
 
@@ -43,7 +45,8 @@ const Waveform = React.forwardRef<WaveSurfer | null, WaveformProps>(
 
     return (
       <div>
-        <div id="waveform" style={{ height: '50px' }}></div>
+        <div id="waveform" 
+        style={{ marginTop: '10px', background: '#f5f5f51f', padding: "10px", borderRadius: '20px' }}></div>
       </div>
     );
   }
