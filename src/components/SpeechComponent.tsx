@@ -13,12 +13,16 @@ const SpeechComponent = (props: SpeechComponentProps) => {
     const model: SpeechModel = new SpeechModel();
     const recognition = new (window as any).webkitSpeechRecognition();
 
+    /**
+     * This 'useEffect' handles voice recognition for controlling audio playback and updates the UI based on recognized voice commands.
+     */
     useEffect(() => {
         if ('webkitSpeechRecognition' in window && waveform != undefined) {
             recognition.continuous = true; // Continuously listen for commands
             recognition.interimResults = false;
             recognition.onresult = (event: any) => {
                 const current = event.resultIndex;
+                //String resulting from the model
                 const transcript = event.results[current][0].transcript.trim();
                 let current_voice = document.getElementById('current_voice') as HTMLOutputElement;
                 current_voice.innerText = "🎙️ " + transcript;

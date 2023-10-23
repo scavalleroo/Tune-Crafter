@@ -255,7 +255,8 @@ export class GestureModel {
     }
 
     /**
-     * Function to update the effect factor based on the angle taken by the Thumb_Up gesture
+     * Function to update the effect factor based on the angle taken by the Thumb_Up gesture, specifically the angle from the 
+     * segment between the thumb tip and the wrist (landmarks 4 and 0 of the model scheleton)
      */
     updateEffectsValue(point1: Coordinates, point2: Coordinates) {
         var angle: number = 0;

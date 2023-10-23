@@ -1,6 +1,3 @@
-//import AudioScheduler from "./AudioScheduler";
-
-//Make it a function calss?
 export class AudioManager {
     private audioContext: AudioContext | null; 
     private audioBufferMap: Map<string, AudioBuffer>;  //With each sound

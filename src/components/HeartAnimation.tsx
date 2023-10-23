@@ -1,5 +1,8 @@
 import React, { useEffect, useState, useRef } from "react";
 
+/**
+ * Class randomizing icons displaying based on the heartbeat received from the connection with the smartwatch
+ */
 export function HeartAnimation({ id, onAnimationEnd }: any) {
     const opacityDuration: number = 1;
         const [position, setPosition] = useState({ x: window.innerWidth / 2, y: window.innerHeight - 140 });

@@ -24,7 +24,6 @@ const GestureComponent = (props: GestureComponentProps) => {
     var waveform = props.waveform;
     var gestureRecognizer: GestureRecognizer | null = null;
 
-    //var gestureOutput : any | null = null;
     var canvasElement: any | null = null;
     var canvasCtx: any | null = null;
     var results: any = undefined;
@@ -50,7 +49,9 @@ const GestureComponent = (props: GestureComponentProps) => {
         }
     }, [video, waveform]);
 
-    // Add other useEffect hooks as needed
+    /**
+     * Function to create the gestureRecognizer and initialization of the regions (used to create loops in the music flow)
+     */
     const createGestureRecognizer = async () => {
         try {
             const vision = await FilesetResolver.forVisionTasks("../../node_modules/@mediapipe/tasks-vision/wasm");
@@ -87,8 +88,11 @@ const GestureComponent = (props: GestureComponentProps) => {
         }
     }
 
+    /**
+     * Function to predict gestures from the webcam feed
+     */
     const predictWebcam = () => {
-        // Now let's start detecting the stream.
+        // Start detecting the stream
         if (gestureRecognizer) {
             setupCanvas();
             let nowInMs = Date.now();
@@ -103,6 +107,9 @@ const GestureComponent = (props: GestureComponentProps) => {
         }
     };
 
+    /**
+     * Function to load in advance all the sounds used in the application in the AudioManager
+     */
     const setAudioObjects = () => {
         // Load audio files
         soundManager.loadSound('mainMusic', 'assets/sounds/audio.mp3')
@@ -125,6 +132,9 @@ const GestureComponent = (props: GestureComponentProps) => {
         canvasCtx.clearRect(0, 0, canvasElement.width, canvasElement.height);
     }
 
+    /**
+     * Function to render the user's hands skeleton
+     */
     const drawHands = () => {
         const drawingUtils = new DrawingUtils(canvasCtx);
         if (results && results.landmarks) {
@@ -146,6 +156,9 @@ const GestureComponent = (props: GestureComponentProps) => {
         canvasCtx.restore();
     }
 
+    /**
+     * Function from which all the handles are called
+     */
     const performAction = () => {
         if (results && results.gestures.length == 0) {
             let current_gesture = document.getElementById('current_gesture') as HTMLOutputElement;
@@ -165,12 +178,18 @@ const GestureComponent = (props: GestureComponentProps) => {
         }
     }
 
+    /**
+     * Function to detect the specific action returned by the model
+     */
     const detectAction = (categoryName: string, handedness: string, landmarks: any) => {
         let current_gesture = document.getElementById('current_gesture') as HTMLOutputElement;
         model.updateFSMStates(categoryName, handedness, landmarks, current_gesture, model.wsRegions);
         setGestureMesssage();
     }
 
+    /**
+     * Function setting the "guide" messages shown to the users
+     */
     const setGestureMesssage = () => {
         let current_gesture = document.getElementById('current_gesture') as HTMLOutputElement;
         let cutText = model.getCutText();
@@ -179,7 +198,9 @@ const GestureComponent = (props: GestureComponentProps) => {
         }
     }
 
-
+    /**
+     * Function to handle "drums" effects. Mapped to each finger (through the relative landmark)
+     */
     const handleDrums = (handedness: string, landmarks: any) => {
         //DRUMS detect and managing
         if (handedness == "Left") {
@@ -194,12 +215,18 @@ const GestureComponent = (props: GestureComponentProps) => {
         }
     }
 
+    /**
+     * Function to handle play/pause based on detected gestures (Closed_Fist)
+     */
     const handlePlayPause = () => {
         if (waveform && model.runPlayPause()) {
             waveform.playPause();
         }
     }
 
+    /**
+     * Function to handle audio effects based on detected gestures (Thumb_Up)
+     */
     const handleEffects = (handedness: string, landmarks: any) => {
         let speedText = model.getSpeedText(landmarks, handedness);
         if (speedText) {
@@ -209,12 +236,18 @@ const GestureComponent = (props: GestureComponentProps) => {
         }
     }
 
+    /**
+     * Function to handle waveform regions based on detected gestures (creation and deletion)
+     */
     const handleRegions = () => {
         if (waveform) {
             model.handleLoopRegions(waveform.getCurrentTime());
         }
     }
 
+    /**
+     * Function to handle volume control based on the gesture detected
+     */
     const handleVolume = (landmarks: any) => {
         if (model.isVolumeStarted()) {
             let currentVolume: number = 1 - landmarks[8].x;
