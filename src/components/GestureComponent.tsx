@@ -330,7 +330,7 @@ const GestureComponent = (props: GestureComponentProps) => {
                 <button className="btn btn-link close-button-list" onClick={toggleCollapse}>
                     {isCollapsed ? <FaRegWindowMaximize /> : <FaRegWindowMinimize />}
                 </button>
-                <strong>👋 Gestures list:</strong>
+                <strong>Gestures list</strong>
                 <p>Use only 1 hand at the time</p>
                 {!isCollapsed && (
                     <ul>

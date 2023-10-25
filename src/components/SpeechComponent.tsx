@@ -103,7 +103,7 @@ const SpeechComponent = (props: SpeechComponentProps) => {
                 <button className="btn btn-link close-button-list" onClick={toggleCollapse}>
                     {isCollapsed ? <FaRegWindowMaximize /> : <FaRegWindowMinimize />}
                 </button>
-                <strong style={{ paddingRight: "60px" }}>List of voice commands</strong>
+                <strong style={{ paddingRight: "60px" }}>Voice commands list</strong>
                 {!isCollapsed && (
                     <ul>
                         <li>🎙️ Start/Play</li>
