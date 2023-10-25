@@ -20,6 +20,7 @@ const AudioWaveComponent = React.forwardRef<WaveSurfer | null, WaveformProps>(
       });
 
       wavesurfer.load(audioUrl);
+
       wavesurferRef.current = wavesurfer;
 
       return () => {

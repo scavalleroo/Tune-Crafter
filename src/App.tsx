@@ -4,7 +4,7 @@ import './App.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import { WaveSurfer } from 'wavesurfer-react/dist/utils/createWavesurfer';
 
-import { HeartRateComponent } from './components/HeartRateComponent';
+// import { HeartRateComponent } from './components/HeartRateComponent';
 import GestureComponent from "./components/GestureComponent";
 import AudioWaveComponent from "./components/AudioWaveComponent";
 import SpeechComponent from "./components/SpeechComponent";
@@ -17,13 +17,13 @@ function App() {
 
   useEffect(() => {
     if (hasGetUserMedia()) {
-      console.warn("Enebling webcam");
+      console.log("Enebling webcam");
       enableCam();
-      console.warn("Webcam enabled");
+      console.log("Webcam enabled");
     } else {
-      console.warn("getUserMedia() is not supported by your browser");
+      console.log("getUserMedia() is not supported by your browser");
     }
-  });
+  }, [video]);
 
   function enableCam() {
     const constraints = { video: true };
@@ -35,6 +35,9 @@ function App() {
 
       if (video != null) {
         video.srcObject = stream;
+        video.onload = function () {
+          console.log("Webcam loaded");
+        };
       }
     });
 
@@ -43,12 +46,14 @@ function App() {
   return (
     <>
       <section className="main-cont">
-        <HeartRateComponent />
+        {/* <HeartRateComponent /> */}
         <div className="waveForm">
           <AudioWaveComponent ref={waveformRef} audioUrl={audioUrl} />
         </div>
         <video id="webcam" autoPlay playsInline style={{ display: "none" }}></video>
-        <GestureComponent video={video} waveform={waveformRef.current}></GestureComponent>
+        {video && (
+          <GestureComponent video={video} waveform={waveformRef.current}></GestureComponent>
+        )}
         <SpeechComponent waveform={waveformRef.current}></SpeechComponent>
       </section>
     </>

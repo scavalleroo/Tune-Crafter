@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import RegionsPlugin from 'wavesurfer.js/src/plugin/regions';
 import 'bootstrap/dist/css/bootstrap.css';
+import { FaRegWindowMinimize, FaRegWindowMaximize } from 'react-icons/fa';
 
 import { GestureRecognizer, FilesetResolver, DrawingUtils } from '../../node_modules/@mediapipe/tasks-vision';
 import { AudioManager } from "../AudioManager";
@@ -37,13 +38,20 @@ const GestureComponent = (props: GestureComponentProps) => {
     const [isVolumeVisible, setIsVolumeVisible] = useState<boolean>(false);
     var lastVideoTime: any = -1;
 
+    const [isCollapsed, setCollapsed] = useState(false);
+
+    const toggleCollapse = () => {
+        setCollapsed(!isCollapsed);
+    };
+
     // Excecuted every time the video or the waveForm change
     useEffect(() => {
-        console.log("Video: " + video); 
         if (video && waveform && gestureRecognizer == null) {
+            console.log("Loading the gesture recognizer...");
             createGestureRecognizer().then(() => {
                 video?.addEventListener("loadeddata", predictWebcam);
                 window.requestAnimationFrame(predictWebcam.bind(this));
+                console.log("Gesture recognizer loaded!");
             });
             setAudioObjects();
         }
@@ -53,18 +61,17 @@ const GestureComponent = (props: GestureComponentProps) => {
      * Function to create the gestureRecognizer and initialization of the regions (used to create loops in the music flow)
      */
     const createGestureRecognizer = async () => {
-        try {
-            const vision = await FilesetResolver.forVisionTasks("../../node_modules/@mediapipe/tasks-vision/wasm");
-            const recognizer = await GestureRecognizer.createFromOptions(vision, {
-                baseOptions: {
-                    modelAssetPath: "../../public/models/gesture_recognizer.task"
-                },
-                numHands: 2,
-                runningMode: "VIDEO"
-            });
+        let recognizer = await loadModelWithRetry();
+        if (recognizer) {
             gestureRecognizer = recognizer;
-        } catch (error) {
-            console.error(error);
+        }
+
+        if (gestureRecognizer) {
+            console.log("Model loaded successfully.");
+            // Use gestureRecognizer for further processing
+        } else {
+            console.error("Model loading failed after all retry attempts.");
+            // Handle the failure case here
         }
 
         if (!model.haveRegions()) {
@@ -72,7 +79,6 @@ const GestureComponent = (props: GestureComponentProps) => {
             regions?.on('region-created', (region: any) => {
                 if (region.loop) {
                     region.playLoop();
-                    console.log(region);
                 }
             });
             regions?.on('region-out', (region: any) => {
@@ -81,12 +87,50 @@ const GestureComponent = (props: GestureComponentProps) => {
                 }
             });
             regions?.on('region-removed', (_: any) => {
-                console.log("Region removed");
                 waveform?.play();
             });
             model.setRegions(regions);
         }
     }
+
+    async function loadModelWithRetry() {
+        let maxRetries = 3; // Maximum number of retry attempts
+        let currentRetry = 0;
+        let recognizer;
+
+        while (currentRetry < maxRetries) {
+            try {
+                const vision = await FilesetResolver.forVisionTasks("../../node_modules/@mediapipe/tasks-vision/wasm");
+                recognizer = await GestureRecognizer.createFromOptions(vision, {
+                    baseOptions: {
+                        modelAssetPath: "../../public/models/gesture_recognizer.task"
+                    },
+                    numHands: 2,
+                    runningMode: "VIDEO"
+                });
+                break; // If loading is successful, exit the loop
+            } catch (error) {
+                console.error("An error occurred on attempt #" + (currentRetry + 1) + ":", error);
+
+                // Calculate and log the percentage of completion
+                const percentage = ((currentRetry + 1) / maxRetries) * 100;
+                console.log("Loading progress: " + percentage.toFixed(2) + "%");
+
+                currentRetry++;
+
+                if (currentRetry < maxRetries) {
+                    // You can add a delay before the next retry if needed
+                    // await new Promise(resolve => setTimeout(resolve, retryDelayMilliseconds));
+                } else {
+                    console.error("Maximum retry attempts reached. Model loading failed.");
+                    break; // Exit the loop if max retries are reached
+                }
+            }
+        }
+
+        return recognizer; // Return the loaded recognizer or null if all retries failed
+    }
+
 
     /**
      * Function to predict gestures from the webcam feed
@@ -96,10 +140,14 @@ const GestureComponent = (props: GestureComponentProps) => {
         if (gestureRecognizer) {
             setupCanvas();
             let nowInMs = Date.now();
-            if (video?.currentTime !== lastVideoTime) {
-                lastVideoTime = video!.currentTime;
-                const newResults = gestureRecognizer?.recognizeForVideo(video!, nowInMs);
-                results = newResults;
+            if (video && video?.currentTime !== lastVideoTime) {
+                lastVideoTime = video.currentTime;
+                try {
+                    const newResults = gestureRecognizer?.recognizeForVideo(video, nowInMs);
+                    results = newResults;
+                } catch (error) {
+                    console.error(error);
+                }
             }
             drawHands();
             performAction();
@@ -165,16 +213,18 @@ const GestureComponent = (props: GestureComponentProps) => {
             current_gesture.innerText = "🙌";
         }
 
-        for (let i = 0; i < results.gestures.length; i++) {
-            const categoryName = results.gestures[i][0].categoryName;
-            const handedness = results.handednesses[i][0].displayName;
+        if (results && results.gestures.length > 0) {
+            for (let i = 0; i < results.gestures.length; i++) {
+                const categoryName = results.gestures[i][0].categoryName;
+                const handedness = results.handednesses[i][0].displayName;
 
-            detectAction(categoryName, handedness, results.landmarks[i]);
-            handleDrums(handedness, results.landmarks[i]);
-            handlePlayPause();
-            handleEffects(handedness, results.landmarks[i]);
-            handleRegions();
-            handleVolume(results.landmarks[i]);
+                detectAction(categoryName, handedness, results.landmarks[i]);
+                handleDrums(handedness, results.landmarks[i]);
+                handlePlayPause();
+                handleEffects(handedness, results.landmarks[i]);
+                handleRegions();
+                handleVolume(results.landmarks[i]);
+            }
         }
     }
 
@@ -275,6 +325,24 @@ const GestureComponent = (props: GestureComponentProps) => {
             <p className="tooltipGesture">Current gesture</p>
             <div className="volumeProgressBar" style={{ display: isVolumeVisible ? "block" : "none" }}>
                 <VolumeProgressBar volume={volume}></VolumeProgressBar>
+            </div>
+            <div className="listOfGestures">
+                <button className="btn btn-link close-button-list" onClick={toggleCollapse}>
+                    {isCollapsed ? <FaRegWindowMaximize /> : <FaRegWindowMinimize />}
+                </button>
+                <strong>👋 Gestures list:</strong>
+                <p>Use only 1 hand at the time</p>
+                {!isCollapsed && (
+                    <ul>
+                        <li>Right Hand 🖐️ + ✊: Play/Pause</li>
+                        <li>Right Hand 👍 + Rotate: control speed</li>
+                        <li>Right Hand 👆 + ↔️: Volume control</li>
+                        <li>Left Hand 🖐️ + 👌 with every finger: play the drum</li>
+                        <li>Left Hand ✌️ + 🤞: Start a loop</li>
+                        <li>Right Hand ✌️ + 🤞: Close a loop</li>
+                        <li>Left Hand ✌️: To remove a loop</li>
+                    </ul>
+                )}
             </div>
         </>
     );
