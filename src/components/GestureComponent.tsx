@@ -141,11 +141,10 @@ const GestureComponent = (props: GestureComponentProps) => {
         // Start detecting the stream
         if (gestureRecognizer) {
             setupCanvas();
-            let nowInMs = Date.now();
             if (video && video.videoHeight > 0 && video.videoWidth > 0) {
                 console.log("Predicting... " + video.videoHeight + " " + video.videoWidth);
                 try {
-                    results = gestureRecognizer.recognizeForVideo(video, nowInMs);
+                    results = gestureRecognizer.recognizeForVideo(video, Date.now());
                     console.log(results);
                 } catch (error) {
                     console.error(error);
