@@ -100,14 +100,23 @@ const GestureComponent = (props: GestureComponentProps) => {
 
         while (currentRetry < maxRetries) {
             try {
-                const vision = await FilesetResolver.forVisionTasks("../../node_modules/@mediapipe/tasks-vision/wasm");
-                recognizer = await GestureRecognizer.createFromOptions(vision, {
-                    baseOptions: {
-                        modelAssetPath: "../../public/models/gesture_recognizer.task"
+                const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm");
+                // recognizer = await GestureRecognizer.createFromOptions(vision, {
+                //     baseOptions: {
+                //         modelAssetPath: "../../public/models/gesture_recognizer.task"
+                //     },
+                //     numHands: 2,
+                //     runningMode: "VIDEO"
+                // });
+                recognizer = await GestureRecognizer.createFromOptions(vision,
+                    {
+                        baseOptions: {
+                            modelAssetPath: "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task",
+                        },
+                        numHands: 2,
+                        runningMode: "VIDEO"
                     },
-                    numHands: 2,
-                    runningMode: "VIDEO"
-                });
+                );
                 break; // If loading is successful, exit the loop
             } catch (error) {
                 console.error("An error occurred on attempt #" + (currentRetry + 1) + ":", error);
