@@ -36,7 +36,7 @@ const GestureComponent = (props: GestureComponentProps) => {
 
     const [volume, setVolume] = useState<number>(50);
     const [isVolumeVisible, setIsVolumeVisible] = useState<boolean>(false);
-    var lastVideoTime: any = -1;
+    // var lastVideoTime: any = -1;
 
     const [isCollapsed, setCollapsed] = useState(false);
 
@@ -50,7 +50,9 @@ const GestureComponent = (props: GestureComponentProps) => {
             console.log("Loading the gesture recognizer...");
             createGestureRecognizer().then(() => {
                 video?.addEventListener("loadeddata", predictWebcam);
-                window.requestAnimationFrame(predictWebcam.bind(this));
+                requestAnimationFrame(() => {
+                    predictWebcam();
+                });
                 console.log("Gesture recognizer loaded!");
             });
             setAudioObjects();
@@ -100,10 +102,10 @@ const GestureComponent = (props: GestureComponentProps) => {
 
         while (currentRetry < maxRetries) {
             try {
-                const vision = await FilesetResolver.forVisionTasks("../../node_modules/@mediapipe/tasks-vision/wasm");
+                const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision/wasm");
                 recognizer = await GestureRecognizer.createFromOptions(vision, {
                     baseOptions: {
-                        modelAssetPath: "../../public/models/gesture_recognizer.task"
+                        modelAssetPath: "https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task"
                     },
                     numHands: 2,
                     runningMode: "VIDEO"
@@ -140,18 +142,21 @@ const GestureComponent = (props: GestureComponentProps) => {
         if (gestureRecognizer) {
             setupCanvas();
             let nowInMs = Date.now();
-            if (video && video?.currentTime !== lastVideoTime) {
-                lastVideoTime = video.currentTime;
+            if (video && video.videoHeight > 0 && video.videoWidth > 0) {
+                console.log("Predicting... " + video.videoHeight + " " + video.videoWidth);
                 try {
-                    const newResults = gestureRecognizer?.recognizeForVideo(video, nowInMs);
-                    results = newResults;
+                    results = gestureRecognizer.recognizeForVideo(video, nowInMs);
+                    console.log(results);
                 } catch (error) {
                     console.error(error);
                 }
             }
             drawHands();
             performAction();
-            window.requestAnimationFrame(predictWebcam.bind(this));
+            requestAnimationFrame(() => {
+                predictWebcam();
+            });
+            // window.requestAnimationFrame(predictWebcam.bind(this));
         }
     };
 

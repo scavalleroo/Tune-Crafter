@@ -17,30 +17,22 @@ function App() {
 
   useEffect(() => {
     if (hasGetUserMedia()) {
-      console.log("Enebling webcam");
       enableCam();
-      console.log("Webcam enabled");
     } else {
       console.log("getUserMedia() is not supported by your browser");
     }
   }, [video]);
 
   function enableCam() {
-    const constraints = { video: true };
-
     // Activate the webcam stream.
-    navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
-
+    navigator.mediaDevices.getUserMedia({ video: true }).then((stream) => {
       setVideo(document.getElementById("webcam") as HTMLVideoElement);
-
       if (video != null) {
         video.srcObject = stream;
-        video.onload = function () {
-          console.log("Webcam loaded");
-        };
       }
+    }).catch((error) => {
+      console.error("Error accessing webcam:", error);
     });
-
   }
 
   return (
