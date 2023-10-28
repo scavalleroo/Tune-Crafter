@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import ReactGA from 'react-ga';
+import ReactGA from 'react-ga4';
 import RegionsPlugin from 'wavesurfer.js/src/plugin/regions';
 import 'bootstrap/dist/css/bootstrap.css';
 import { FaRegWindowMinimize, FaRegWindowMaximize } from 'react-icons/fa';
