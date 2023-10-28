@@ -8,11 +8,14 @@ import { WaveSurfer } from 'wavesurfer-react/dist/utils/createWavesurfer';
 import GestureComponent from "./components/GestureComponent";
 import AudioWaveComponent from "./components/AudioWaveComponent";
 import SpeechComponent from "./components/SpeechComponent";
+import ReactGA from 'react-ga';
 
 function App() {
   let audioUrl = "assets/sounds/audio.mp3"
   const waveformRef: Ref<WaveSurfer> | null = useRef<WaveSurfer | null>(null);
   const [video, setVideo] = useState<HTMLVideoElement | null>(null);
+  const TRACKING_ID = "G-J108BT7PYF"; // OUR_TRACKING_ID
+  ReactGA.initialize(TRACKING_ID);
   // Check if the browser supports the WebSpeech API
 
   useEffect(() => {

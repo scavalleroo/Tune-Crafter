@@ -1,3 +1,4 @@
+import ReactGA from 'react-ga';
 import { PlayPauseState, CutState, IndexState, MiddleState, RingState, PickyState, VolumeState, EffectsState } from "../utils/GesturesFSM";
 import { calculateAngle, closedPoints } from "../utils/helpers";
 import { Coordinates } from "../components/GestureComponent";
@@ -30,16 +31,23 @@ export class GestureModel {
             case "None":
                 if (this.currSCut == CutState.StartCuttingLeft && handedness == "Left" && closedPoints(landmarks[6], landmarks[10], 0.1) && closedPoints(landmarks[7], landmarks[11], 0.1) && closedPoints(landmarks[8], landmarks[12], 0.1)) {
                     this.currSCut = CutState.ClosedCutLeft;
+                    ReactGA.event({
+                        category: 'User Interaction',
+                        action: 'gesture',   
+                        label: 'ClosedCutLeft',
+                    });
                 } else {
                     if (this.currSCut == CutState.StartCuttingRight && handedness == "Right" && closedPoints(landmarks[6], landmarks[10], 0.1) && closedPoints(landmarks[7], landmarks[11], 0.1) && closedPoints(landmarks[8], landmarks[12], 0.1)) {
                         this.currSCut = CutState.ClosedCutRight;
+                        ReactGA.event({
+                            category: 'User Interaction',
+                            action: 'gesture',   
+                            label: 'ClosedCutRight',
+                        });
                     }
                 }
                 this.currSVolume = VolumeState.Empty;
                 this.currSEffects = EffectsState.Empty;
-
-                //handleDrums(handedness, landmarks);
-
                 break;
             case "Pointing_Up":
                 this.currSPlayPause = PlayPauseState.Empty;
@@ -54,6 +62,11 @@ export class GestureModel {
                 this.currSEffects = EffectsState.Empty;
                 if (handedness == "Right") {
                     this.currSVolume = VolumeState.Started;
+                    ReactGA.event({
+                        category: 'User Interaction',
+                        action: 'gesture',   
+                        label: 'VolumeStarted',
+                    });
                     current_gesture.innerText = "👆 + ↔️ → Down 🔈 ↔️ 🔊 Up";
                 }
                 break;
@@ -61,6 +74,11 @@ export class GestureModel {
                 if (handedness == "Right") {
                     this.currSPlayPause = PlayPauseState.Started;
                     current_gesture.innerText = "🖐️ + ✊ → ⏯️";
+                    ReactGA.event({
+                        category: 'User Interaction',
+                        action: 'gesture',   
+                        label: 'PlayPauseStarted',
+                    });
                 }
                 if (this.currSCut != CutState.Empty) {
                     wsRegions.clearRegions();
@@ -79,6 +97,11 @@ export class GestureModel {
                     if (this.currSPlayPause == PlayPauseState.Started) {
                         this.currSPlayPause = PlayPauseState.Completed;
                         current_gesture.innerText = "⏯️ ✅";
+                        ReactGA.event({
+                            category: 'User Interaction',
+                            action: 'gesture',   
+                            label: 'PlayPauseCompleted',
+                        });
                     }
 
                 }
@@ -114,16 +137,31 @@ export class GestureModel {
                     case CutState.ClosedCutLeft:
                         if (handedness == "Left") {
                             this.currSCut = CutState.CuttedLeft;
+                            ReactGA.event({
+                                category: 'User Interaction',
+                                action: 'gesture',   
+                                label: 'CuttedLeft',
+                            });
                         }
                         break;
                     case CutState.CuttedLeft:
                         if (handedness == "Right") {
                             this.currSCut = CutState.StartCuttingRight;
+                            ReactGA.event({
+                                category: 'User Interaction',
+                                action: 'gesture',   
+                                label: 'StartCuttingRight',
+                            });
                         }
                         break;
                     case CutState.ClosedCutRight:
                         if (handedness == "Right") {
                             this.currSCut = CutState.CuttedCompleted;
+                            ReactGA.event({
+                                category: 'User Interaction',
+                                action: 'gesture',   
+                                label: 'CuttedCompleted',
+                            });
                         }
                         break;
                 }
@@ -142,6 +180,11 @@ export class GestureModel {
                 if (handedness == "Right") {
                     this.currSEffects = EffectsState.StartPuttingEffects;
                     current_gesture.innerText = "👍 + 🔄 → Speed";
+                    ReactGA.event({
+                        category: 'User Interaction',
+                        action: 'gesture',   
+                        label: 'StartPuttingEffects',
+                    });
                 }
                 break;
             case "Thumb_Down":

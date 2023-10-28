@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import ReactGA from 'react-ga';
 import 'bootstrap/dist/css/bootstrap.css';
 import WaveSurfer from "wavesurfer.js";
 import { SpeechModel } from "../models/SpeechModel";
@@ -49,6 +50,11 @@ const SpeechComponent = (props: SpeechComponentProps) => {
                         break;
                     case 'pause':
                     case 'stop':
+                        ReactGA.event({
+                            category: 'User Interaction',
+                            action: 'speech',   
+                            label: 'Stop/Pause',
+                        });
                         if (waveform?.isPlaying()) {
                             waveform?.playPause();
                             current_voice.innerText = "🎙️ Pause ⏹️ ✅";
@@ -56,22 +62,47 @@ const SpeechComponent = (props: SpeechComponentProps) => {
                         break;
                     case 'repeat':
                     case 'loop':
+                        ReactGA.event({
+                            category: 'User Interaction',
+                            action: 'speech',   
+                            label: 'Repeat/Loop',
+                        });
                         waveform?.setCurrentTime(0);
                         current_voice.innerText = "🎙️ Playback 🔁 ✅";
                         break;
                     case 'next':
+                        ReactGA.event({
+                            category: 'User Interaction',
+                            action: 'speech',   
+                            label: 'Next',
+                        });
                         model.nextSong();
                         newTrack();
                         break;
                     case "emilio":
+                        ReactGA.event({
+                            category: 'User Interaction',
+                            action: 'speech',   
+                            label: 'Emilio',
+                        });
                         model.setEmilioSong();
                         newTrack();
                         break;
                     case "laura":
+                        ReactGA.event({
+                            category: 'User Interaction',
+                            action: 'speech',   
+                            label: 'Laura',
+                        });
                         model.setLauraSong();
                         newTrack();
                         break;
                     case "nina":
+                        ReactGA.event({
+                            category: 'User Interaction',
+                            action: 'speech',   
+                            label: 'Nina',
+                        });
                         model.setNinaSong();
                         newTrack();
                         break;
@@ -81,6 +112,11 @@ const SpeechComponent = (props: SpeechComponentProps) => {
         }
 
         waveform?.on('finish', () => {
+            ReactGA.event({
+                category: 'Automatic',
+                action: 'speech',
+                label: 'Next',
+            });
             model.nextSong();
             newTrack();
         });
