@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import ReactGA from 'react-ga';
+import ReactGA from 'react-ga4';
 import 'bootstrap/dist/css/bootstrap.css';
 import WaveSurfer from "wavesurfer.js";
 import { SpeechModel } from "../models/SpeechModel";
