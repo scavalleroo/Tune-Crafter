@@ -3,11 +3,11 @@ import { hasGetUserMedia } from './utils/helpers';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.css';
 import { WaveSurfer } from 'wavesurfer-react/dist/utils/createWavesurfer';
-
-// import { HeartRateComponent } from './components/HeartRateComponent';
 import GestureComponent from "./components/GestureComponent";
 import AudioWaveComponent from "./components/AudioWaveComponent";
 import SpeechComponent from "./components/SpeechComponent";
+import { AudioManager } from "./AudioManager";
+import currentMode from "./CurrentMode";
 
 function App() {
   let audioUrl = "assets/sounds/audio.mp3"
@@ -15,6 +15,8 @@ function App() {
   const [video, setVideo] = useState<HTMLVideoElement | null>(null);
   // Check if the browser supports the WebSpeech API
 
+  const soundManager: AudioManager = new AudioManager(waveformRef.current);
+  
   useEffect(() => {
     if (hasGetUserMedia()) {
       enableCam();
@@ -40,13 +42,13 @@ function App() {
       <section className="main-cont">
         {/* <HeartRateComponent /> */}
         <div className="waveForm">
-          <AudioWaveComponent ref={waveformRef} audioUrl={audioUrl} />
+          <AudioWaveComponent ref={waveformRef} audioUrl={audioUrl}/>
         </div>
         <video id="webcam" autoPlay playsInline style={{ display: "none" }}></video>
         {video && (
-          <GestureComponent video={video} waveform={waveformRef.current}></GestureComponent>
+          <GestureComponent video={video} waveform={waveformRef.current} soundManager={soundManager}></GestureComponent>
         )}
-        <SpeechComponent waveform={waveformRef.current}></SpeechComponent>
+        <SpeechComponent waveform={waveformRef.current} soundManager={soundManager}></SpeechComponent>
       </section>
     </>
   )

@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from "react";
 import 'bootstrap/dist/css/bootstrap.css';
 import WaveSurfer from "wavesurfer.js";
-import { SpeechModel } from "../models/SpeechModel";
 import { FaRegWindowMinimize, FaRegWindowMaximize } from 'react-icons/fa';
+import { AudioManager } from "../AudioManager";
+import currentMode from "../CurrentMode";
 
 interface SpeechComponentProps {
-    waveform: WaveSurfer | null
+    waveform: WaveSurfer | null,
+    soundManager: AudioManager
 }
 
 const SpeechComponent = (props: SpeechComponentProps) => {
     // Define a sensitivity value to control effect change speed
     var waveform = props.waveform;
-    const model: SpeechModel = new SpeechModel();
+    var soundManager = props.soundManager;
     const recognition = new (window as any).webkitSpeechRecognition();
     var currentWord = "";
 
@@ -38,10 +40,14 @@ const SpeechComponent = (props: SpeechComponentProps) => {
                     return;
                 }
                 let current_voice = document.getElementById('current_voice') as HTMLOutputElement;
-                current_voice.innerText = "🎙️ " + transcript;
+                //current_voice.innerText = "🎙️ " + transcript;
+
+                //Timeout to clean the transcript?
+
                 switch (transcript.toLowerCase().trim()) {
                     case 'start':
                     case 'play':
+                        console.warn("play");
                         if (!waveform?.isPlaying()) {
                             waveform?.playPause();
                             current_voice.innerText = "🎙️ Play ▶️ ✅";
@@ -49,6 +55,7 @@ const SpeechComponent = (props: SpeechComponentProps) => {
                         break;
                     case 'pause':
                     case 'stop':
+                        console.warn("stop");
                         if (waveform?.isPlaying()) {
                             waveform?.playPause();
                             current_voice.innerText = "🎙️ Pause ⏹️ ✅";
@@ -56,44 +63,49 @@ const SpeechComponent = (props: SpeechComponentProps) => {
                         break;
                     case 'repeat':
                     case 'loop':
+                        console.warn("loop");
                         waveform?.setCurrentTime(0);
                         current_voice.innerText = "🎙️ Playback 🔁 ✅";
                         break;
                     case 'next':
-                        model.nextSong();
-                        newTrack();
+                        console.warn("next");
+                        soundManager.nextSong();
+                        soundManager.newTrack();
                         break;
                     case "emilio":
-                        model.setEmilioSong();
-                        newTrack();
+                        console.warn("emilio");
+                        soundManager.setEmilioSong();
+                        soundManager.newTrack();
                         break;
                     case "laura":
-                        model.setLauraSong();
-                        newTrack();
+                        console.warn("laura");
+                        soundManager.setLauraSong();
+                        soundManager.newTrack();
                         break;
                     case "nina":
-                        model.setNinaSong();
-                        newTrack();
+                        console.warn("nina");
+                        soundManager.setNinaSong();
+                        soundManager.newTrack();
+                        break;
+                    case "christmas":
+                        console.warn("christmas");
+                        soundManager.setChristmasSong();
+                        soundManager.newTrack();
+                        currentMode.mode = "christmas";
+                        break;
+                    case "normal":
+                    case "reset":
+                        console.warn("reset");
+                        soundManager.setNormalSongs();
+                        soundManager.newTrack();
+                        currentMode.mode = "normal";
                         break;
                 }
             };
             recognition.start();
         }
 
-        waveform?.on('finish', () => {
-            model.nextSong();
-            newTrack();
-        });
     });
-
-    const newTrack = () => {
-        waveform?.load("assets/sounds/" + model.getCurrentSong());
-        waveform?.on('ready', () => {
-            waveform?.play();
-        });
-        let current_voice = document.getElementById('current_voice') as HTMLOutputElement;
-        current_voice.innerText = "🎙️ New Track ✅";
-    }
 
     return (
         <>

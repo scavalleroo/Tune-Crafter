@@ -4,10 +4,10 @@ import 'bootstrap/dist/css/bootstrap.css';
 import { FaRegWindowMinimize, FaRegWindowMaximize } from 'react-icons/fa';
 
 import { GestureRecognizer, FilesetResolver, DrawingUtils } from '../../node_modules/@mediapipe/tasks-vision';
-import { AudioManager } from "../AudioManager";
 import VolumeProgressBar from "./VolumeProgressBar";
 import WaveSurfer from "wavesurfer.js";
 import { GestureModel } from "../models/GestureModel";
+import { AudioManager } from "../AudioManager";
 
 export interface Coordinates {
     x: number;
@@ -16,13 +16,15 @@ export interface Coordinates {
 
 interface GestureComponentProps {
     video: HTMLVideoElement | null,
-    waveform: WaveSurfer | null
+    waveform: WaveSurfer | null,
+    soundManager: AudioManager
 }
 
 const GestureComponent = (props: GestureComponentProps) => {
     // Define a sensitivity value to control effect change speed
     var video = props.video;
     var waveform = props.waveform;
+    var soundManager = props.soundManager;
     var gestureRecognizer: GestureRecognizer | null = null;
 
     var canvasElement: any | null = null;
@@ -31,7 +33,7 @@ const GestureComponent = (props: GestureComponentProps) => {
     const videoHeight = "100vh";
     const videoWidth = "auto";
     var volumeTimer: any = null;
-    const soundManager: AudioManager = new AudioManager();
+    
     const model: GestureModel = new GestureModel();
 
     const [volume, setVolume] = useState<number>(50);
@@ -163,13 +165,7 @@ const GestureComponent = (props: GestureComponentProps) => {
      * Function to load in advance all the sounds used in the application in the AudioManager
      */
     const setAudioObjects = () => {
-        // Load audio files
-        soundManager.loadSound('mainMusic', 'assets/sounds/audio.mp3')
-        soundManager.loadSound('bassdrum', 'assets/sounds/kick.wav');
-        soundManager.loadSound('snare', 'assets/sounds/snare.wav');
-        soundManager.loadSound('hat', 'assets/sounds/hat.wav');
-        soundManager.loadSound('clap', 'assets/sounds/clap.wav');
-
+        soundManager.loadAllSounds();
     }
 
     const setupCanvas = () => {
@@ -258,8 +254,6 @@ const GestureComponent = (props: GestureComponentProps) => {
     const handleDrums = (handedness: string, landmarks: any) => {
         //DRUMS detect and managing
         if (handedness == "Left") {
-            //Audio to put in async to play them without overriding everything (?)
-            //Index finger action
             let sound = model.getDrumSound(landmarks);
             if (sound) {
                 soundManager.playSound(sound);

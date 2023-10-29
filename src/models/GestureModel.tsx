@@ -194,7 +194,7 @@ export class GestureModel {
             if (this.currSIndex == IndexState.Listening) {
                 // Play the audio in the background
                 this.currSIndex = IndexState.Stopping;
-                return 'bassdrum';
+                return 'index';
             }
         } else {
             this.currSIndex = IndexState.Listening;
@@ -205,7 +205,7 @@ export class GestureModel {
             if (this.currSMiddle == MiddleState.Listening) {
                 // Play the audio in the background
                 this.currSMiddle = MiddleState.Stopping;
-                return 'snare';
+                return 'middle';
             }
         } else {
             this.currSMiddle = MiddleState.Listening;
@@ -216,7 +216,7 @@ export class GestureModel {
             if (this.currSRing == RingState.Listening) {
                 // Play the audio in the background
                 this.currSRing = RingState.Stopping;
-                return 'clap';
+                return 'ring';
             }
         } else {
             this.currSRing = RingState.Listening;
@@ -227,7 +227,7 @@ export class GestureModel {
             if (this.currSPincky == PickyState.Listening) {
                 // Play sounds
                 this.currSPincky = PickyState.Stopping;
-                return 'hat';
+                return 'pinky';
             }
         } else {
             this.currSPincky = PickyState.Listening;
