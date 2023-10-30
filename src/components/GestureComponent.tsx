@@ -9,7 +9,6 @@ import { GestureModel } from "../models/GestureModel";
 import { AudioManager } from "../AudioManager";
 import VolumeProgressBar from "./VolumeProgressBar";
 
-
 export interface Coordinates {
     x: number;
     y: number;

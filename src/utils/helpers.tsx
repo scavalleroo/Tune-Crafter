@@ -21,7 +21,7 @@ export const calculateAngle = (coord1: Coordinates, coord2: Coordinates) => {
         angle += 2 * Math.PI;
     }
 
-    var angleDegree = angle * 70 / Math.PI;
+    var angleDegree = angle * 68 / Math.PI;
     angleDegree += (angleDegree - 100) * 4;
 
     return angleDegree;
