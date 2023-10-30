@@ -96,7 +96,7 @@ html {
 
 .output_canvas {
   position: absolute;
-  top: 0px;
+  top: 250px;
   right: 0px;
   margin: 0 auto;
   width: 100% !important;

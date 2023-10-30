@@ -144,9 +144,6 @@ const SpeechComponent = (props: SpeechComponentProps) => {
             recognition.onstart = () => {
                 console.log("Voice recognition started");
             };
-            recognition.onspeechend = () => {
-                recognition.start();
-            };
             recognition.start();
         }
 

@@ -69,7 +69,7 @@ function App() {
                 </p>
               </div>
               <div className="col">
-                <SpeechComponent waveform={waveformRef.current} model={speechModel}></SpeechComponent>
+                <SpeechComponent waveform={waveformRef.current} soundManager={soundManager}></SpeechComponent>
               </div>
             </div>
           </div>

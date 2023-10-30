@@ -10,11 +10,10 @@ interface WaveformProps {
 const AudioWaveComponent = React.forwardRef<WaveSurfer | null, WaveformProps>(
   ({ audioUrl, soundManager }, ref) => {
     const wavesurferRef = useRef<WaveSurfer | null>(null);
-    let [currentSong, setCurrentSong] = useState(soundManager.getCurrentSongIndex());
+    let [songs, setSongs] = useState(soundManager.getSongs());
 
     soundManager.addListener(() => {
-      setCurrentSong(soundManager.getCurrentSongIndex());
-      console.log("Song changed to: " + currentSong);
+      setSongs(soundManager.getSongs());
     });
 
     useEffect(() => {
@@ -60,13 +59,13 @@ const AudioWaveComponent = React.forwardRef<WaveSurfer | null, WaveformProps>(
         <div id="waveform">
         </div>
         <div className='trackNumbers' style={{ position: "relative" }}>
-          {soundManager.getSongs().map((_: any, index: any) => (
+          {songs.map((_: any, index: any) => (
             <div
               key={index}
               className={`trackNumber ${index === soundManager.getCurrentSongIndex() ? 'currentTrack' : ''}`}
               onClick={() => changeSong(index)}
               style={{ position: "relative" }}>
-              {index + 1}
+              {songs.length == 1 ? songs[index].name : index + 1}
             </div>
           ))}
         </div>

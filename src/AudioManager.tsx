@@ -2,22 +2,18 @@ import currentMode from "./CurrentMode";
 
 const NORMAL_SONGS = [{path: "audio.mp3", name: "Original Track"}, {path: "audio_techno.mp3", name: "Techno Track"}, {path: "audio_original.mp3", name: "Chill Track"}];
 const LAURA_SONGS = [{path: "hiddenSounds/laura.mp3", name: "Måneskin - Ella baila sola (cover de Peso Pluma) LIVE"}];
-const EMILIO_SONGS = [{path: "hiddenSounds/emilio.mp3", name: "Acustic Track"}];
+const EMILIO_SONGS = [{path: "hiddenSounds/emilio.mp3", name: "Emilio's Track"}];
 const NINA_SONGS = [{path: "hiddenSounds/nina.mp3", name: "Love on the Brain (Rihanna Cover) by Nina <a target='_blank' href='https://www.instagram.com/ninamazza_/'>@ninamazza_</a>"}];
-const CHRISTMAS_SONGS = ["hiddenSounds/christmas.mp3"];
-
-var songs: any = NORMAL_SONGS;
+const CHRISTMAS_SONGS = [{path: "hiddenSounds/christmas.mp3", name: "Christmas Track"}];
 
 export class AudioManager {
   private audioContext: AudioContext | null = null;
   private normalAudioBufferMap: Map<string, AudioBuffer>;  //With each sound
   private christmasAudioBufferMap: Map<string, AudioBuffer>;  //With each sound
-
   private currentSong: number = 0;
-
   private waveform: WaveSurfer | null = null;
-
   private listeners: any = [];
+  private songs: any = NORMAL_SONGS;
 
   addListener(listener: any) {
     this.listeners.push(listener);
@@ -132,7 +128,7 @@ export class AudioManager {
     let current_voice = document.getElementById('current_voice') as HTMLOutputElement;
     current_voice.innerText = "🎙️ New Track ✅";
     let currentSongName = document.getElementById('currentSongName') as HTMLOutputElement;
-    currentSongName.innerHTML = "🟣 Now Playing: " + songs[this.currentSong].name;
+    currentSongName.innerHTML = "🟣 Now Playing: " + this.songs[this.currentSong].name;
     this.fireListeners();
   }
 
@@ -140,7 +136,7 @@ export class AudioManager {
    * Function to set the next song
    */
   nextSong() {
-    this.currentSong = (this.currentSong + 1) % songs.length;
+    this.currentSong = (this.currentSong + 1) % this.songs.length;
     this.fireListeners()
   }
 
@@ -148,41 +144,41 @@ export class AudioManager {
    * Function to get the current song playing
    */
   getCurrentSong() {
-    return songs[this.currentSong].path;
+    return this.songs[this.currentSong].path;
   }
 
   setLauraSong() {
     this.currentSong = 0;
-    songs = LAURA_SONGS;
+    this.songs = LAURA_SONGS;
     this.fireListeners();
   }
 
   setEmilioSong() {
     this.currentSong = 0;
-    songs = EMILIO_SONGS;
+    this.songs = EMILIO_SONGS;
     this.fireListeners();
   }
 
   setNinaSong() {
     this.currentSong = 0;
-    songs = NINA_SONGS;
+    this.songs = NINA_SONGS;
     this.fireListeners();
   }
 
   setChristmasSong() {
     this.currentSong = 0;
-    songs = CHRISTMAS_SONGS;
+    this.songs = CHRISTMAS_SONGS;
     this.fireListeners();
   }
 
   setNormalSongs() {
     this.currentSong = 0;
-    songs = NORMAL_SONGS;
+    this.songs = NORMAL_SONGS;
     this.fireListeners();
   }
 
   getCurrentSongName() {
-    return songs[this.currentSong].name;
+    return this.songs[this.currentSong].name;
   }
 
   getCurrentSongIndex() {
@@ -190,7 +186,7 @@ export class AudioManager {
   }
 
   setCurrentSongIndex(index: number) {
-    if (index < 0 || index >= songs.length) {
+    if (index < 0 || index >= this.songs.length) {
       return;
     }
     this.currentSong = index;
@@ -198,7 +194,7 @@ export class AudioManager {
   }
   
   getSongs() {
-    return songs;
+    return this.songs;
   }
 
 }
