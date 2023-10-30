@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
+import ReactGA from 'react-ga4';
 import 'bootstrap/dist/css/bootstrap.css';
 import WaveSurfer from "wavesurfer.js";
-import { FaRegWindowMinimize, FaRegWindowMaximize } from 'react-icons/fa';
 import { AudioManager } from "../AudioManager";
 import currentMode from "../CurrentMode";
 
@@ -16,12 +16,16 @@ const SpeechComponent = (props: SpeechComponentProps) => {
     var soundManager = props.soundManager;
     const recognition = new (window as any).webkitSpeechRecognition();
     var currentWord = "";
+    var currentTime = 0;
 
-    const [isCollapsed, setCollapsed] = useState(false);
+    let [currentSong, setCurrentSong] = useState(soundManager.getCurrentSongIndex());
 
-    const toggleCollapse = () => {
-        setCollapsed(!isCollapsed);
-    };
+    soundManager.addListener(() => {
+        setCurrentSong(soundManager.getCurrentSongIndex());
+        console.log("Song changed to: " + currentSong);
+        let currentSongName = document.getElementById('currentSongName') as HTMLOutputElement;
+        currentSongName.innerHTML = "🟣 Now Playing: " + soundManager.getCurrentSongName();
+    });
 
     /**
      * This 'useEffect' handles voice recognition for controlling audio playback and updates the UI based on recognized voice commands.
@@ -37,14 +41,14 @@ const SpeechComponent = (props: SpeechComponentProps) => {
                 if (currentWord != transcript) {
                     currentWord = transcript;
                 } else {
-                    return;
+                    if (new Date().getTime() - currentTime <= 2000) {
+                        return;
+                    }
                 }
+                currentTime = new Date().getTime();
                 let current_voice = document.getElementById('current_voice') as HTMLOutputElement;
-                //current_voice.innerText = "🎙️ " + transcript;
-
-                //Timeout to clean the transcript?
-
-                switch (transcript.toLowerCase().trim()) {
+                current_voice.innerText = "🎙️ " + currentWord;
+                switch (currentWord.toLowerCase().trim()) {
                     case 'start':
                     case 'play':
                         console.warn("play");
@@ -56,6 +60,11 @@ const SpeechComponent = (props: SpeechComponentProps) => {
                     case 'pause':
                     case 'stop':
                         console.warn("stop");
+                        ReactGA.event({
+                            category: 'User Interaction',
+                            action: 'speech',
+                            label: 'Stop/Pause',
+                        });
                         if (waveform?.isPlaying()) {
                             waveform?.playPause();
                             current_voice.innerText = "🎙️ Pause ⏹️ ✅";
@@ -64,31 +73,61 @@ const SpeechComponent = (props: SpeechComponentProps) => {
                     case 'repeat':
                     case 'loop':
                         console.warn("loop");
+                        ReactGA.event({
+                            category: 'User Interaction',
+                            action: 'speech',
+                            label: 'Repeat/Loop',
+                        });
                         waveform?.setCurrentTime(0);
                         current_voice.innerText = "🎙️ Playback 🔁 ✅";
                         break;
                     case 'next':
+                        ReactGA.event({
+                            category: 'User Interaction',
+                            action: 'speech',
+                            label: 'Next',
+                        });
                         console.warn("next");
                         soundManager.nextSong();
                         soundManager.newTrack();
                         break;
                     case "emilio":
+                        ReactGA.event({
+                            category: 'User Interaction',
+                            action: 'speech',
+                            label: 'Emilio',
+                        });
                         console.warn("emilio");
                         soundManager.setEmilioSong();
                         soundManager.newTrack();
                         break;
                     case "laura":
+                        ReactGA.event({
+                            category: 'User Interaction',
+                            action: 'speech',
+                            label: 'Laura',
+                        });
                         console.warn("laura");
                         soundManager.setLauraSong();
                         soundManager.newTrack();
                         break;
                     case "nina":
+                        ReactGA.event({
+                            category: 'User Interaction',
+                            action: 'speech',
+                            label: 'Nina',
+                        });
                         console.warn("nina");
                         soundManager.setNinaSong();
                         soundManager.newTrack();
                         break;
                     case "christmas":
                         console.warn("christmas");
+                        ReactGA.event({
+                            category: 'User Interaction',
+                            action: 'speech',
+                            label: 'Christmas',
+                        });
                         soundManager.setChristmasSong();
                         soundManager.newTrack();
                         currentMode.mode = "christmas";
@@ -102,6 +141,12 @@ const SpeechComponent = (props: SpeechComponentProps) => {
                         break;
                 }
             };
+            recognition.onstart = () => {
+                console.log("Voice recognition started");
+            };
+            recognition.onspeechend = () => {
+                recognition.start();
+            };
             recognition.start();
         }
 
@@ -109,21 +154,9 @@ const SpeechComponent = (props: SpeechComponentProps) => {
 
     return (
         <>
-            <p id='current_voice' className="currVoice">🎙️</p>
-            <p className="tooltipVoice">Voice commands</p>
-            <div className="listVoiceCommands">
-                <button className="btn btn-link close-button-list" onClick={toggleCollapse}>
-                    {isCollapsed ? <FaRegWindowMaximize /> : <FaRegWindowMinimize />}
-                </button>
-                <strong style={{ paddingRight: "60px" }}>Voice commands list</strong>
-                {!isCollapsed && (
-                    <ul>
-                        <li>🎙️ Start/Play</li>
-                        <li>🎙️ Pause/Stop</li>
-                        <li>🎙️ Repeat/Loop</li>
-                        <li>🎙️ Next</li>
-                    </ul>
-                )}
+            <div style={{ marginTop: "20px" }}>
+                <p id='current_voice' className="currGesture">🎙️</p>
+                <p className="tooltipGesture">Voice commands</p>
             </div>
         </>
     );

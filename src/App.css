@@ -42,16 +42,14 @@ html {
 }
 
 .waveForm {
-  width: 65%;
-  margin: 0 auto;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 .volumeProgressBar {
   position: absolute;
-  bottom: 30px;
-  width: 80%;
-  margin-left: 10%;
-  margin-right: 10%;
+  bottom: 25px;
+  width: 97%;
 }
 
 .removed {
@@ -97,6 +95,9 @@ html {
 }
 
 .output_canvas {
+  position: absolute;
+  top: 0px;
+  right: 0px;
   margin: 0 auto;
   width: 100% !important;
   height: 100%;
@@ -132,45 +133,36 @@ html {
 .currGesture {
   font-size: 18px;
   font-weight: bold;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  position: absolute;
-  top: 210px;
   background: white;
   padding: 10px;
   border-radius: 20px;
+  width: fit-content;
+  margin: 0 auto;
 }
 
 .tooltipGesture {
-  color: lightgrey;
+  width: fit-content;
+  margin: 0 auto;
   font-size: 14px;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  position: absolute;
-  top: 210px;
-  margin-top: 40px;
+  padding-top: 5px;
+  color: white;
 }
 
 .currVoice {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  margin-top: 25px;
+  margin-top: 5px;
   background: white;
   padding: 10px;
   border-radius: 10px;
   max-width: 200px;
-  width: auto;
+  width: fit-content;
   color: black;
   font-size: 16px;
+  margin-bottom: 10px;
 }
 
 .tooltipVoice {
   color: lightgrey;
   font-size: 14px;
-  top: 10px;
-  left: 10px;
-  position: absolute;
 }
 
 .ebony {
@@ -189,17 +181,6 @@ html {
   color: #7A0B85;
 }
 
-.listVoiceCommands {
-  position: absolute;
-  bottom: 10px;
-  left: 10px;
-  color: white;
-  background: rgba(245, 245, 245, 0.12);
-  border-radius: 10px;
-  padding: 10px;
-  font-size: 14px;
-}
-
 .listVoiceCommands ul,
 .listOfGestures ul {
   list-style: none;
@@ -207,23 +188,64 @@ html {
   margin: 0;
 }
 
-.listOfGestures {
-  position: absolute;
-  bottom: 10px;
-  right: 10px;
+.sidebar {
+  position: relative;
+  width: 250px;
+  transition: left 0.3s ease-in-out;
+  height: 100vh;
+  background-color: rgba(245, 245, 245, 0.12);
+  overflow-x: hidden;
+  transition: 0.5s;
   color: white;
-  background: rgba(245, 245, 245, 0.12);
-  border-radius: 10px;
   padding: 10px;
   font-size: 14px;
+  border-radius: 0px 10px 0px 0px;
 }
 
-.close-button-list {
-  padding: 0px !important;
-  margin: 0px !important;
-  position: absolute !important;
-  right: 10px !important;
-  top: 5px !important;
-  color: white !important;
-  font-size: 18px !important;
+
+.sidebar .closebtn {
+  position: absolute;
+  right: 10px;
+  background: none;
+  color: inherit;
+  border: none;
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+  outline: inherit;
+  font-size: 25px;
+  top: 0px;
+}
+
+/* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
+@media screen and (max-height: 450px) {
+  .sidebar {
+    padding-top: 15px;
+  }
+
+  .sidebar a {
+    font-size: 18px;
+  }
+}
+
+.trackNumbers {
+  padding-top: 8px;
+  display: flex;
+  margin: 0 auto;
+  width: fit-content;
+}
+
+.trackNumber {
+  font-size: 10px;
+  color: black;
+  padding: 5px 10px 5px 10px;
+  background: white;
+  border-radius: 10px;
+  margin-left: 5px;
+  cursor: pointer;
+}
+
+.currentTrack {
+  background: #7A0B85 !important;
+  color: white;
 }

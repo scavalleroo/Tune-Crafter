@@ -1,13 +1,21 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { WaveSurfer } from 'wavesurfer-react/dist/utils/createWavesurfer';
+import { AudioManager } from '../AudioManager';
 
 interface WaveformProps {
   audioUrl: string;
+  soundManager: AudioManager;
 }
 
 const AudioWaveComponent = React.forwardRef<WaveSurfer | null, WaveformProps>(
-  ({audioUrl}, ref) => {
+  ({ audioUrl, soundManager }, ref) => {
     const wavesurferRef = useRef<WaveSurfer | null>(null);
+    let [currentSong, setCurrentSong] = useState(soundManager.getCurrentSongIndex());
+
+    soundManager.addListener(() => {
+      setCurrentSong(soundManager.getCurrentSongIndex());
+      console.log("Song changed to: " + currentSong);
+    });
 
     useEffect(() => {
       const wavesurfer = WaveSurfer.create({
@@ -16,7 +24,8 @@ const AudioWaveComponent = React.forwardRef<WaveSurfer | null, WaveformProps>(
         waveColor: '#B01EB0',
         progressColor: '#0B060E',
         cursorColor: '#F5F5F5',
-        cursorWidth: 3
+        cursorWidth: 3,
+        fillParent: true,
       });
 
       wavesurfer.load(audioUrl);
@@ -41,10 +50,26 @@ const AudioWaveComponent = React.forwardRef<WaveSurfer | null, WaveformProps>(
       }
     }, [ref]);
 
+    const changeSong = (index: number) => {
+      soundManager.setCurrentSongIndex(index);
+      wavesurferRef.current?.load("assets/sounds/" + soundManager.getCurrentSong());
+    };
+
     return (
-      <div>
-        <div id="waveform" 
-        style={{ marginTop: '10px', background: '#f5f5f51f', padding: "10px", borderRadius: '20px' }}></div>
+      <div style={{ marginTop: '10px', background: '#f5f5f51f', padding: "10px", borderRadius: '20px', position: "relative" }}>
+        <div id="waveform">
+        </div>
+        <div className='trackNumbers' style={{ position: "relative" }}>
+          {soundManager.getSongs().map((_: any, index: any) => (
+            <div
+              key={index}
+              className={`trackNumber ${index === soundManager.getCurrentSongIndex() ? 'currentTrack' : ''}`}
+              onClick={() => changeSong(index)}
+              style={{ position: "relative" }}>
+              {index + 1}
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

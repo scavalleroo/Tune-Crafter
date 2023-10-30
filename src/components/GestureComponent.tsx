@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
+import ReactGA from 'react-ga4';
 import RegionsPlugin from 'wavesurfer.js/src/plugin/regions';
 import 'bootstrap/dist/css/bootstrap.css';
-import { FaRegWindowMinimize, FaRegWindowMaximize } from 'react-icons/fa';
 
 import { GestureRecognizer, FilesetResolver, DrawingUtils } from '../../node_modules/@mediapipe/tasks-vision';
 import VolumeProgressBar from "./VolumeProgressBar";
@@ -40,22 +40,14 @@ const GestureComponent = (props: GestureComponentProps) => {
     const [isVolumeVisible, setIsVolumeVisible] = useState<boolean>(false);
     // var lastVideoTime: any = -1;
 
-    const [isCollapsed, setCollapsed] = useState(false);
-
-    const toggleCollapse = () => {
-        setCollapsed(!isCollapsed);
-    };
-
     // Excecuted every time the video or the waveForm change
     useEffect(() => {
         if (video && waveform && gestureRecognizer == null) {
-            console.log("Loading the gesture recognizer...");
             createGestureRecognizer().then(() => {
                 video?.addEventListener("loadeddata", predictWebcam);
                 requestAnimationFrame(() => {
                     predictWebcam();
                 });
-                console.log("Gesture recognizer loaded!");
             });
             setAudioObjects();
         }
@@ -70,10 +62,7 @@ const GestureComponent = (props: GestureComponentProps) => {
             gestureRecognizer = recognizer;
         }
 
-        if (gestureRecognizer) {
-            console.log("Model loaded successfully.");
-            // Use gestureRecognizer for further processing
-        } else {
+        if (!gestureRecognizer) {
             console.error("Model loading failed after all retry attempts.");
             // Handle the failure case here
         }
@@ -144,10 +133,8 @@ const GestureComponent = (props: GestureComponentProps) => {
         if (gestureRecognizer) {
             setupCanvas();
             if (video && video.videoHeight > 0 && video.videoWidth > 0) {
-                console.log("Predicting... " + video.videoHeight + " " + video.videoWidth);
                 try {
                     results = gestureRecognizer.recognizeForVideo(video, Date.now());
-                    console.log(results);
                 } catch (error) {
                     console.error(error);
                 }
@@ -256,6 +243,11 @@ const GestureComponent = (props: GestureComponentProps) => {
         if (handedness == "Left") {
             let sound = model.getDrumSound(landmarks);
             if (sound) {
+                ReactGA.event({
+                    category: 'User Interaction',
+                    action: 'gesture',
+                    label: sound,
+                });
                 soundManager.playSound(sound);
                 let current_gesture = document.getElementById('current_gesture') as HTMLOutputElement;
                 current_gesture.innerText = "🥁 ✅";
@@ -316,31 +308,15 @@ const GestureComponent = (props: GestureComponentProps) => {
 
     return (
         <>
-            <div>
-                <canvas className="output_canvas" id="output_canvas" width="1280" height="720">  </canvas>
+            <div style={{ marginTop: "20px" }}>
+                <p id='current_gesture' className="currGesture">🙌</p>
+                <p className="tooltipGesture">Current gesture</p>
             </div>
-            <p id='current_gesture' className="currGesture">🙌</p>
-            <p className="tooltipGesture">Current gesture</p>
             <div className="volumeProgressBar" style={{ display: isVolumeVisible ? "block" : "none" }}>
                 <VolumeProgressBar volume={volume}></VolumeProgressBar>
             </div>
-            <div className="listOfGestures">
-                <button className="btn btn-link close-button-list" onClick={toggleCollapse}>
-                    {isCollapsed ? <FaRegWindowMaximize /> : <FaRegWindowMinimize />}
-                </button>
-                <strong>Gestures list</strong>
-                <p>Use only 1 hand at the time</p>
-                {!isCollapsed && (
-                    <ul>
-                        <li>Right Hand 🖐️ + ✊: Play/Pause</li>
-                        <li>Right Hand 👍 + Rotate: control speed</li>
-                        <li>Right Hand 👆 + ↔️: Volume control</li>
-                        <li>Left Hand 🖐️ + 👌 with every finger: play the drum</li>
-                        <li>Left Hand ✌️ + 🤞: Start a loop</li>
-                        <li>Right Hand ✌️ + 🤞: Close a loop</li>
-                        <li>Left Hand ✌️: To remove a loop</li>
-                    </ul>
-                )}
+            <div>
+                <canvas className="output_canvas" id="output_canvas" width="1280" height="720" />
             </div>
         </>
     );
