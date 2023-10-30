@@ -75,7 +75,7 @@ function App() {
           </div>
         </div>
         <video id="webcam" autoPlay playsInline style={{ display: "none" }}></video>
-        <p style={{ position: "absolute", bottom: "0px", color: "#f5f5ff85", fontSize: "10px", left: "50%", transform: "translate(-50%, -50%)" }}>Copyright © 2023 by Alessandro Cavallotti, Matteo Fornara, and Shubankar. All rights reserved.</p>
+        <p style={{ position: "absolute", bottom: "0px", color: "#f5f5ff85", fontSize: "10px", left: "50%", transform: "translate(-50%, -50%)" }}>Copyright © 2023 by <a href="https://www.linkedin.com/in/alecava/" target="_blank">Alessandro Cavallotti</a>, <a href="https://www.linkedin.com/in/matteo-fornara-756994210/" target="_blank">Matteo Fornara</a>, and <a href="https://www.linkedin.com/in/shubhankars/" target="_blank">Shubankar</a>. All rights reserved.</p>
       </section>
     </>
   )
