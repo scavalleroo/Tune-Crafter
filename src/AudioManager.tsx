@@ -12,6 +12,7 @@ export class AudioManager {
   private christmasAudioBufferMap: Map<string, AudioBuffer>;  //With each sound
   private currentSong: number = 0;
   private waveform: WaveSurfer | null = null;
+  private speedValue: number = 1;
   private listeners: any = [];
   private songs: any = NORMAL_SONGS;
 
@@ -195,6 +196,14 @@ export class AudioManager {
   
   getSongs() {
     return this.songs;
+  }
+
+  getSpeedValue(): number {
+    return Math.min(2, Math.max(0.5, this.speedValue));
+  }
+
+  setSpeedValue(speedValue: number): void {
+    this.speedValue = speedValue;
   }
 
 }
