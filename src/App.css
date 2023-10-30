@@ -213,8 +213,8 @@ html {
   font: inherit;
   cursor: pointer;
   outline: inherit;
-  font-size: 40px;
-  top: -10px;
+  font-size: 25px;
+  top: 0px;
 }
 
 /* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
@@ -226,4 +226,26 @@ html {
   .sidebar a {
     font-size: 18px;
   }
+}
+
+.trackNumbers {
+  padding-top: 8px;
+  display: flex;
+  margin: 0 auto;
+  width: fit-content;
+}
+
+.trackNumber {
+  font-size: 10px;
+  color: black;
+  padding: 5px 10px 5px 10px;
+  background: white;
+  border-radius: 10px;
+  margin-left: 5px;
+  cursor: pointer;
+}
+
+.currentTrack {
+  background: #7A0B85 !important;
+  color: white;
 }

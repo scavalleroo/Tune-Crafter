@@ -1,13 +1,21 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { WaveSurfer } from 'wavesurfer-react/dist/utils/createWavesurfer';
+import { SpeechModel } from '../models/SpeechModel';
 
 interface WaveformProps {
   audioUrl: string;
+  speechModel: SpeechModel;
 }
 
 const AudioWaveComponent = React.forwardRef<WaveSurfer | null, WaveformProps>(
-  ({audioUrl}, ref) => {
+  ({ audioUrl, speechModel }, ref) => {
     const wavesurferRef = useRef<WaveSurfer | null>(null);
+    let [currentSong, setCurrentSong] = useState(speechModel.getCurrentSongIndex());
+
+    speechModel.addListener(() => {
+      setCurrentSong(speechModel.getCurrentSongIndex());
+      console.log("Song changed to: " + currentSong);
+    });
 
     useEffect(() => {
       const wavesurfer = WaveSurfer.create({
@@ -42,10 +50,26 @@ const AudioWaveComponent = React.forwardRef<WaveSurfer | null, WaveformProps>(
       }
     }, [ref]);
 
+    const changeSong = (index: number) => {
+      speechModel.setCurrentSongIndex(index);
+      wavesurferRef.current?.load("assets/sounds/" + speechModel.getCurrentSong());
+    };
+
     return (
-      <div>
-        <div id="waveform" 
-        style={{ marginTop: '10px', background: '#f5f5f51f', padding: "10px", borderRadius: '20px' }}></div>
+      <div style={{ marginTop: '10px', background: '#f5f5f51f', padding: "10px", borderRadius: '20px' }}>
+        <div id="waveform">
+        </div>
+        <div className='trackNumbers'>
+          {speechModel.getSongs().map((_: any, index: any) => (
+            <div
+              key={index}
+              className={`trackNumber ${index === speechModel.getCurrentSongIndex() ? 'currentTrack' : ''}`}
+              onClick={() => changeSong(index)}
+            >
+              {index + 1}
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

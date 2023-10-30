@@ -9,11 +9,13 @@ import GestureComponent from "./components/GestureComponent";
 import AudioWaveComponent from "./components/AudioWaveComponent";
 import SpeechComponent from "./components/SpeechComponent";
 import SideBar from "./components/SideBar";
+import { SpeechModel } from "./models/SpeechModel";
 
 function App() {
   let audioUrl = "assets/sounds/audio.mp3"
   const waveformRef: Ref<WaveSurfer> | null = useRef<WaveSurfer | null>(null);
   const [video, setVideo] = useState<HTMLVideoElement | null>(null);
+  const speechModel: SpeechModel = new SpeechModel();
   // Check if the browser supports the WebSpeech API
 
   useEffect(() => {
@@ -52,7 +54,7 @@ function App() {
           </div>
           <div className="col" style={{ position: "relative" }}>
             <div className="waveForm">
-              <AudioWaveComponent ref={waveformRef} audioUrl={audioUrl} />
+              <AudioWaveComponent ref={waveformRef} audioUrl={audioUrl} speechModel={speechModel} />
             </div>
             <div className="row">
               <div className="col">
@@ -68,7 +70,7 @@ function App() {
                 </p>
               </div>
               <div className="col">
-                <SpeechComponent waveform={waveformRef.current}></SpeechComponent>
+                <SpeechComponent waveform={waveformRef.current} model={speechModel}></SpeechComponent>
               </div>
             </div>
           </div>

@@ -1,21 +1,31 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import ReactGA from 'react-ga4';
 import 'bootstrap/dist/css/bootstrap.css';
 import WaveSurfer from "wavesurfer.js";
 import { SpeechModel } from "../models/SpeechModel";
 
 interface SpeechComponentProps {
-    waveform: WaveSurfer | null
+    waveform: WaveSurfer | null,
+    model: SpeechModel,
 }
 
 const SpeechComponent = (props: SpeechComponentProps) => {
     // Define a sensitivity value to control effect change speed
     var waveform = props.waveform;
-    const model: SpeechModel = new SpeechModel();
+    var model = props.model;
     const recognition = new (window as any).webkitSpeechRecognition() || new (window as any).SpeechRecognition();
 
     var currentWord = "";
     var currentTime = 0;
+
+    let [currentSong, setCurrentSong] = useState(model.getCurrentSongIndex());
+
+    model.addListener(() => {
+        setCurrentSong(model.getCurrentSongIndex());
+        console.log("Song changed to: " + currentSong);
+        let currentSongName = document.getElementById('currentSongName') as HTMLOutputElement;
+        currentSongName.innerHTML = "🟣 Now Playing: " + model.getCurrentSongName();
+    });
 
     /**
      * This 'useEffect' handles voice recognition for controlling audio playback and updates the UI based on recognized voice commands.

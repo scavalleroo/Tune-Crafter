@@ -1,8 +1,21 @@
 import React, { Component } from "react";
 
 class SideBar extends Component {
+
     state = {
-        isCollapsed: false
+        isCollapsed: window.innerWidth < 700,
+    }
+
+    componentDidMount() {
+        window.addEventListener("resize", this.handleResize);
+    }
+
+    componentWillUnmount() {
+        window.removeEventListener("resize", this.handleResize);
+    }
+
+    handleResize = () => {
+        this.setState({ isCollapsed: window.innerWidth < 700 });
     };
 
     toggleCollapse = () => {
@@ -15,7 +28,7 @@ class SideBar extends Component {
         } else {
             this.closeNav();
         }
-    };
+    }
 
     openNav() {
         const sideBar = document.getElementById("sideBar_1");
@@ -37,30 +50,32 @@ class SideBar extends Component {
         const content = document.getElementById("content");
         const waveForm: any = document.getElementsByClassName("waveForm")[0];
         if (sideBar && btnClose && content && waveForm) {
-            sideBar.style.width = "50px";
+            sideBar.style.width = "40px";
             btnClose.innerHTML = "☰";
             content.style.display = "none";
-            waveForm.style.width = "calc(100% - 200px)";
+            waveForm.style.width = window.innerWidth < 700 ? "100%" : "calc(100% - 200px)";
             waveForm.style.margin = "0 auto";
         }
     }
 
     render() {
+        const { isCollapsed } = this.state;
+
         return (
-            <div className="sidebar" id="sideBar_1">
-                <button className="closebtn" id="btnClose" onClick={this.toggleCollapse}>×</button>
-                <div id="content">
+            <div className="sidebar" id="sideBar_1" style={isCollapsed ? { width: "40px" } : { width: "250px" }}>
+                <button className="closebtn" id="btnClose" onClick={this.toggleCollapse}>{isCollapsed ? "☰" : "×"}</button>
+                <div id="content" style={isCollapsed ? { display: "none" } : { display: "block" }}>
                     <strong>Voice commands 🎙️</strong>
-                    <ul style={{paddingLeft: "15px"}}>
+                    <ul style={{ paddingLeft: "15px" }}>
                         <li>🎙️ Start/Play</li>
                         <li>🎙️ Pause/Stop</li>
                         <li>🎙️ Repeat/Loop</li>
                         <li>🎙️ Next</li>
                     </ul>
                     <strong>Gestures 🙌</strong>
-                    <br/>
+                    <br />
                     <p>Use only 1 hand at the time</p>
-                    <ul style={{paddingLeft: "15px"}}>
+                    <ul style={{ paddingLeft: "15px" }}>
                         <li>Right Hand 🖐️ + ✊: Play/Pause</li>
                         <li>Right Hand 👍 + Rotate: control speed</li>
                         <li>Right Hand 👆 + ↔️: Volume control</li>

@@ -6,12 +6,26 @@ const NINA_INDEX = 5;
 
 export class SpeechModel {
     currentSong: number = 0;
+    listeners: any = [];
+
+    addListener(listener: any) {
+        this.listeners.push(listener);
+    }
+
+    removeListener(listener: any) {
+        this.listeners = this.listeners.filter((l: any) => l !== listener);
+    }
+
+    fireListeners() {
+        this.listeners.forEach((listener: any) => listener());
+    }
 
     /**
      * Function to play the next song
      */
     nextSong() {
         this.currentSong = (this.currentSong + 1) % SONGS.length;
+        this.fireListeners();
     }
 
     /**
@@ -21,19 +35,38 @@ export class SpeechModel {
         return SONGS[this.currentSong];
     }
 
+    getCurrentSongIndex() {
+        return this.currentSong;
+    }
+
     getCurrentSongName() {
         return SONGS_NAME[this.currentSong];
     }
 
+    getSongs() {
+        return SONGS;
+    }
+
+    setCurrentSongIndex(index: number) {
+        if (index < 0 || index >= SONGS.length) {
+            return;
+        }
+        this.currentSong = index;
+        this.fireListeners();
+    }
+
     setLauraSong() {
         this.currentSong = LAURA_INDEX;
+        this.fireListeners();
     }
 
     setEmilioSong() {
         this.currentSong = EMILIO_INDEX;
+        this.fireListeners();
     }
 
     setNinaSong() {
         this.currentSong = NINA_INDEX;
+        this.fireListeners();
     }
 }
