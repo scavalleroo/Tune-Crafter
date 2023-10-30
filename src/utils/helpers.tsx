@@ -13,9 +13,16 @@ export const calculateAngle = (coord1: Coordinates, coord2: Coordinates) => {
     const dx = coord2.x - coord1.x;
     const dy = coord2.y - coord1.y;
 
-    const angle = Math.atan2(dy, dx);
+    var angle = Math.atan2(dy, dx);
+    angle = -angle;
 
-    const angleDegree = (angle * 180) / Math.PI
+    // Adjust the angle to be between 0 and 360 degrees
+    if (angle < 0) {
+        angle += 2 * Math.PI;
+    }
+
+    var angleDegree = angle * 70 / Math.PI;
+    angleDegree += (angleDegree - 100) * 4;
 
     return angleDegree;
 };

@@ -34,8 +34,8 @@ const GestureComponent = (props: GestureComponentProps) => {
     const videoHeight = "100vh";
     const videoWidth = "auto";
     var volumeTimer: any = null;
-
-    const model: GestureModel = new GestureModel();
+    
+    const model: GestureModel = new GestureModel(soundManager);
 
     const [volume, setVolume] = useState<number>(50);
     const [isVolumeVisible, setIsVolumeVisible] = useState<boolean>(false);
@@ -273,7 +273,7 @@ const GestureComponent = (props: GestureComponentProps) => {
         if (speedText) {
             let current_gesture = document.getElementById('current_gesture') as HTMLOutputElement;
             current_gesture.innerText = speedText;
-            waveform?.setPlaybackRate(model.getSpeedValue());
+            waveform?.setPlaybackRate(soundManager.getSpeedValue());
         }
     }
 

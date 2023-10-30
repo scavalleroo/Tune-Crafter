@@ -2,6 +2,7 @@ import ReactGA from 'react-ga4';
 import { PlayPauseState, CutState, IndexState, MiddleState, RingState, PickyState, VolumeState, EffectsState } from "../utils/GesturesFSM";
 import { calculateAngle, closedPoints } from "../utils/helpers";
 import { Coordinates } from "../components/GestureComponent";
+import { AudioManager } from '../AudioManager';
 
 export class GestureModel {
     currSPlayPause: PlayPauseState = PlayPauseState.Empty;
@@ -13,10 +14,14 @@ export class GestureModel {
     currSVolume: VolumeState = VolumeState.Empty;
     currSEffects: EffectsState = EffectsState.Empty;
 
-    speedValue: number = 1;
-
     loopRegion: any = undefined;
     wsRegions: any = undefined;
+
+    soundManager: AudioManager | null = null;
+
+    constructor(soundManager: AudioManager) {
+        this.soundManager = soundManager;
+    }
     
     haveRegions() {
         return this.wsRegions != undefined;
@@ -292,7 +297,7 @@ export class GestureModel {
             var currentThumbUpCoordinates = { x: landmarks[4].x, y: landmarks[4].y };
             var referencePoint = { x: landmarks[0].x, y: landmarks[0].y }
             this.updateEffectsValue(currentThumbUpCoordinates!, referencePoint!);
-            return "👍 + 🔄 → Speed: " + this.speedValue.toFixed(2) + "x";
+            return "👍 + 🔄 → Speed: " + this.soundManager?.getSpeedValue().toFixed(2) + "x";
         }
         return undefined;
     }
@@ -304,7 +309,8 @@ export class GestureModel {
     updateEffectsValue(point1: Coordinates, point2: Coordinates) {
         var angle: number = 0;
         angle = calculateAngle(point1, point2);
-        this.speedValue = angle / 100;
+
+        this.soundManager?.setSpeedValue(angle/100);
     }
 
     handleLoopRegions(currentTime: number) {
@@ -335,8 +341,5 @@ export class GestureModel {
     isVolumeStarted() {
         return this.currSVolume == VolumeState.Started;
     }
-
-    getSpeedValue() {
-        return this.speedValue;
-    }
+    
 }
