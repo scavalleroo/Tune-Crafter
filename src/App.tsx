@@ -36,6 +36,12 @@ function App() {
     });
   }
 
+  function isSafari() {
+    const userAgent = navigator.userAgent;
+    return /Safari/i.test(userAgent) && !/Chrome|CriOS|FxiOS|Edg/i.test(userAgent);
+  }
+
+
   return (
     <>
       <section className="main-cont">
@@ -55,7 +61,11 @@ function App() {
                 )}
               </div>
               <div className="col">
-                <p id="currentSongName" style={{ fontSize: "14px", textAlign: "center", marginTop: "40px", color: "white" }}>🟣 Now Playing: Original Track</p>
+                <p id="currentSongName" style={{ fontSize: "14px", textAlign: "center", marginTop: "40px", color: "white" }}>
+                  { isSafari() ?
+                    "This browser doesn't support all features. Try Google Chrome instead" : "🟣 Now Playing: Original Track"
+                  }
+                </p>
               </div>
               <div className="col">
                 <SpeechComponent waveform={waveformRef.current}></SpeechComponent>
