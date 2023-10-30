@@ -7,7 +7,6 @@ import GestureComponent from "./components/GestureComponent";
 import AudioWaveComponent from "./components/AudioWaveComponent";
 import SpeechComponent from "./components/SpeechComponent";
 import { AudioManager } from "./AudioManager";
-import currentMode from "./CurrentMode";
 
 function App() {
   let audioUrl = "assets/sounds/audio.mp3"
