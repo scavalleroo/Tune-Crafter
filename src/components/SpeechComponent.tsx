@@ -31,7 +31,7 @@ const SpeechComponent = (props: SpeechComponentProps) => {
                 if (currentWord != transcript) {
                     currentWord = transcript;
                 } else {
-                    if (new Date().getTime() - currentTime <= 1500) {
+                    if (new Date().getTime() - currentTime <= 2000) {
                         return;
                     }
                 }
