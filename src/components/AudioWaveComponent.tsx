@@ -56,16 +56,16 @@ const AudioWaveComponent = React.forwardRef<WaveSurfer | null, WaveformProps>(
     };
 
     return (
-      <div style={{ marginTop: '10px', background: '#f5f5f51f', padding: "10px", borderRadius: '20px' }}>
+      <div style={{ marginTop: '10px', background: '#f5f5f51f', padding: "10px", borderRadius: '20px', position: "relative" }}>
         <div id="waveform">
         </div>
-        <div className='trackNumbers'>
+        <div className='trackNumbers' style={{ position: "relative" }}>
           {speechModel.getSongs().map((_: any, index: any) => (
             <div
               key={index}
               className={`trackNumber ${index === speechModel.getCurrentSongIndex() ? 'currentTrack' : ''}`}
               onClick={() => changeSong(index)}
-            >
+              style={{ position: "relative" }}>
               {index + 1}
             </div>
           ))}

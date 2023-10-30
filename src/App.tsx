@@ -62,9 +62,9 @@ function App() {
                   <GestureComponent video={video} waveform={waveformRef.current}></GestureComponent>
                 )}
               </div>
-              <div className="col">
+              <div className="col" style={{ position: "relative" }}>
                 <p id="currentSongName" style={{ fontSize: "14px", textAlign: "center", marginTop: "40px", color: "white" }}>
-                  { isSafari() ?
+                  {isSafari() ?
                     "This browser doesn't support all features. Try Google Chrome instead" : "🟣 Now Playing: Original Track"
                   }
                 </p>
