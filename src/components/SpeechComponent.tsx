@@ -12,8 +12,10 @@ const SpeechComponent = (props: SpeechComponentProps) => {
     // Define a sensitivity value to control effect change speed
     var waveform = props.waveform;
     const model: SpeechModel = new SpeechModel();
-    const recognition = new (window as any).webkitSpeechRecognition();
+    const recognition = new (window as any).webkitSpeechRecognition() || new (window as any).SpeechRecognition();
+
     var currentWord = "";
+    var currentTime = 0;
 
     /**
      * This 'useEffect' handles voice recognition for controlling audio playback and updates the UI based on recognized voice commands.
@@ -29,11 +31,14 @@ const SpeechComponent = (props: SpeechComponentProps) => {
                 if (currentWord != transcript) {
                     currentWord = transcript;
                 } else {
-                    return;
+                    if (new Date().getTime() - currentTime <= 1500) {
+                        return;
+                    }
                 }
+                currentTime = new Date().getTime();
                 let current_voice = document.getElementById('current_voice') as HTMLOutputElement;
-                current_voice.innerText = "🎙️ " + transcript;
-                switch (transcript.toLowerCase().trim()) {
+                current_voice.innerText = "🎙️ " + currentWord;
+                switch (currentWord.toLowerCase().trim()) {
                     case 'start':
                     case 'play':
                         if (!waveform?.isPlaying()) {
@@ -101,6 +106,12 @@ const SpeechComponent = (props: SpeechComponentProps) => {
                         break;
                 }
             };
+            recognition.onstart = () => {
+                console.log("Voice recognition started");
+            };
+            recognition.onspeechend = () => {
+                recognition.start();
+            };
             recognition.start();
         }
 
@@ -123,7 +134,7 @@ const SpeechComponent = (props: SpeechComponentProps) => {
         let current_voice = document.getElementById('current_voice') as HTMLOutputElement;
         current_voice.innerText = "🎙️ New Track ✅";
         let currentSongName = document.getElementById('currentSongName') as HTMLOutputElement;
-        currentSongName.innerText = "🟣 Now Playing: " + model.getCurrentSongName();
+        currentSongName.innerHTML = "🟣 Now Playing: " + model.getCurrentSongName();
     }
 
     return (
