@@ -4,10 +4,10 @@ import RegionsPlugin from 'wavesurfer.js/src/plugin/regions';
 import 'bootstrap/dist/css/bootstrap.css';
 
 import { GestureRecognizer, FilesetResolver, DrawingUtils } from '../../node_modules/@mediapipe/tasks-vision';
-import VolumeProgressBar from "./VolumeProgressBar";
 import WaveSurfer from "wavesurfer.js";
 import { GestureModel } from "../models/GestureModel";
 import { AudioManager } from "../AudioManager";
+import VolumeProgressBar from "./volumeProgressBar";
 
 export interface Coordinates {
     x: number;
