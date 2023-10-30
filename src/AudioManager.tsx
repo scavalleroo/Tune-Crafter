@@ -3,7 +3,7 @@ import currentMode from "./CurrentMode";
 const NORMAL_SONGS = [{path: "audio.mp3", name: "Original Track"}, {path: "audio_techno.mp3", name: "Techno Track"}, {path: "audio_original.mp3", name: "Chill Track"}];
 const LAURA_SONGS = [{path: "hiddenSounds/laura.mp3", name: "Måneskin - Ella baila sola (cover de Peso Pluma) LIVE"}];
 const EMILIO_SONGS = [{path: "hiddenSounds/emilio.mp3", name: "Emilio's Track"}];
-const NINA_SONGS = [{path: "hiddenSounds/nina.mp3", name: "Love on the Brain (Rihanna Cover) by Nina <a target='_blank' href='https://www.instagram.com/ninamazza_/'>@ninamazza_</a>"}];
+const NINA_SONGS = [{path: "hiddenSounds/nina.mp3", name: "Love on the Brain (Rihanna Cover) by Nina <a target='_blank' href='https://www.instagram.com/ninamazza_/'>@ninamazza_</a>", shortName: "Love on the Brain (Rihanna Cover) by Nina"}];
 const CHRISTMAS_SONGS = [{path: "hiddenSounds/christmas.mp3", name: "Christmas Track"}];
 
 export class AudioManager {

@@ -71,6 +71,8 @@ class SideBar extends Component {
                         <li>🎙️ Pause/Stop</li>
                         <li>🎙️ Repeat/Loop</li>
                         <li>🎙️ Next</li>
+                        <li><strong>🎙️ Christmas (MODE) 🎅🎄</strong></li>
+                        <li><strong>🎙️ Normal (MODE)</strong></li>
                     </ul>
                     <strong>Gestures 🙌</strong>
                     <br />

@@ -11,9 +11,11 @@ const AudioWaveComponent = React.forwardRef<WaveSurfer | null, WaveformProps>(
   ({ audioUrl, soundManager }, ref) => {
     const wavesurferRef = useRef<WaveSurfer | null>(null);
     let [songs, setSongs] = useState(soundManager.getSongs());
+    let [currentSong, setCurrentSong] = useState(soundManager.getCurrentSongIndex());
 
     soundManager.addListener(() => {
       setSongs(soundManager.getSongs());
+      setCurrentSong(soundManager.getCurrentSongIndex());
     });
 
     useEffect(() => {
@@ -55,17 +57,17 @@ const AudioWaveComponent = React.forwardRef<WaveSurfer | null, WaveformProps>(
     };
 
     return (
-      <div style={{ marginTop: '10px', background: '#f5f5f51f', padding: "10px", borderRadius: '20px', position: "relative" }}>
+      <div style={{ marginTop: '10px', background: '#f5f5f51f', padding: "10px", borderRadius: '20px', position: "relative", zIndex: 1 }}>
         <div id="waveform">
         </div>
         <div className='trackNumbers' style={{ position: "relative" }}>
           {songs.map((_: any, index: any) => (
             <div
               key={index}
-              className={`trackNumber ${index === soundManager.getCurrentSongIndex() ? 'currentTrack' : ''}`}
+              className={`trackNumber ${index === currentSong ? 'currentTrack' : ''}`}
               onClick={() => changeSong(index)}
               style={{ position: "relative" }}>
-              {songs.length == 1 ? songs[index].name : index + 1}
+              {songs.length == 1 ? (songs[index].shortName ? songs[index].shortName : songs[index].name) : index + 1}
             </div>
           ))}
         </div>

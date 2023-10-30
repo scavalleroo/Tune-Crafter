@@ -7,7 +7,8 @@ import { GestureRecognizer, FilesetResolver, DrawingUtils } from '../../node_mod
 import WaveSurfer from "wavesurfer.js";
 import { GestureModel } from "../models/GestureModel";
 import { AudioManager } from "../AudioManager";
-import VolumeProgressBar from "./volumeProgressBar";
+import VolumeProgressBar from "./VolumeProgressBar";
+
 
 export interface Coordinates {
     x: number;
@@ -33,7 +34,7 @@ const GestureComponent = (props: GestureComponentProps) => {
     const videoHeight = "100vh";
     const videoWidth = "auto";
     var volumeTimer: any = null;
-    
+
     const model: GestureModel = new GestureModel();
 
     const [volume, setVolume] = useState<number>(50);
