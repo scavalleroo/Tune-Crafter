@@ -8,6 +8,7 @@ import { WaveSurfer } from 'wavesurfer-react/dist/utils/createWavesurfer';
 import GestureComponent from "./components/GestureComponent";
 import AudioWaveComponent from "./components/AudioWaveComponent";
 import SpeechComponent from "./components/SpeechComponent";
+import SideBar from "./components/SideBar";
 
 function App() {
   let audioUrl = "assets/sounds/audio.mp3"
@@ -39,14 +40,31 @@ function App() {
     <>
       <section className="main-cont">
         {/* <HeartRateComponent /> */}
-        <div className="waveForm">
-          <AudioWaveComponent ref={waveformRef} audioUrl={audioUrl} />
+        <div className="row">
+          <div className="col-auto">
+            <SideBar />
+          </div>
+          <div className="col" style={{ position: "relative" }}>
+            <div className="waveForm">
+              <AudioWaveComponent ref={waveformRef} audioUrl={audioUrl} />
+            </div>
+            <div className="row">
+              <div className="col">
+                {video && (
+                  <GestureComponent video={video} waveform={waveformRef.current}></GestureComponent>
+                )}
+              </div>
+              <div className="col">
+                <p id="currentSongName" style={{ fontSize: "14px", textAlign: "center", marginTop: "40px", color: "white" }}>🟣 Now Playing: Original Track</p>
+              </div>
+              <div className="col">
+                <SpeechComponent waveform={waveformRef.current}></SpeechComponent>
+              </div>
+            </div>
+          </div>
         </div>
         <video id="webcam" autoPlay playsInline style={{ display: "none" }}></video>
-        {video && (
-          <GestureComponent video={video} waveform={waveformRef.current}></GestureComponent>
-        )}
-        <SpeechComponent waveform={waveformRef.current}></SpeechComponent>
+        <p style={{ position: "absolute", bottom: "0px", color: "#f5f5ff85", fontSize: "10px", left: "50%", transform: "translate(-50%, -50%)" }}>Copyright © 2023 by Alessandro Cavallotti, Matteo Fornara, and Shubankar. All rights reserved.</p>
       </section>
     </>
   )

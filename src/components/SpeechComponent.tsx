@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import ReactGA from 'react-ga4';
 import 'bootstrap/dist/css/bootstrap.css';
 import WaveSurfer from "wavesurfer.js";
 import { SpeechModel } from "../models/SpeechModel";
-import { FaRegWindowMinimize, FaRegWindowMaximize } from 'react-icons/fa';
 
 interface SpeechComponentProps {
     waveform: WaveSurfer | null
@@ -15,12 +14,6 @@ const SpeechComponent = (props: SpeechComponentProps) => {
     const model: SpeechModel = new SpeechModel();
     const recognition = new (window as any).webkitSpeechRecognition();
     var currentWord = "";
-
-    const [isCollapsed, setCollapsed] = useState(false);
-
-    const toggleCollapse = () => {
-        setCollapsed(!isCollapsed);
-    };
 
     /**
      * This 'useEffect' handles voice recognition for controlling audio playback and updates the UI based on recognized voice commands.
@@ -52,7 +45,7 @@ const SpeechComponent = (props: SpeechComponentProps) => {
                     case 'stop':
                         ReactGA.event({
                             category: 'User Interaction',
-                            action: 'speech',   
+                            action: 'speech',
                             label: 'Stop/Pause',
                         });
                         if (waveform?.isPlaying()) {
@@ -64,7 +57,7 @@ const SpeechComponent = (props: SpeechComponentProps) => {
                     case 'loop':
                         ReactGA.event({
                             category: 'User Interaction',
-                            action: 'speech',   
+                            action: 'speech',
                             label: 'Repeat/Loop',
                         });
                         waveform?.setCurrentTime(0);
@@ -73,7 +66,7 @@ const SpeechComponent = (props: SpeechComponentProps) => {
                     case 'next':
                         ReactGA.event({
                             category: 'User Interaction',
-                            action: 'speech',   
+                            action: 'speech',
                             label: 'Next',
                         });
                         model.nextSong();
@@ -82,7 +75,7 @@ const SpeechComponent = (props: SpeechComponentProps) => {
                     case "emilio":
                         ReactGA.event({
                             category: 'User Interaction',
-                            action: 'speech',   
+                            action: 'speech',
                             label: 'Emilio',
                         });
                         model.setEmilioSong();
@@ -91,7 +84,7 @@ const SpeechComponent = (props: SpeechComponentProps) => {
                     case "laura":
                         ReactGA.event({
                             category: 'User Interaction',
-                            action: 'speech',   
+                            action: 'speech',
                             label: 'Laura',
                         });
                         model.setLauraSong();
@@ -100,7 +93,7 @@ const SpeechComponent = (props: SpeechComponentProps) => {
                     case "nina":
                         ReactGA.event({
                             category: 'User Interaction',
-                            action: 'speech',   
+                            action: 'speech',
                             label: 'Nina',
                         });
                         model.setNinaSong();
@@ -129,25 +122,15 @@ const SpeechComponent = (props: SpeechComponentProps) => {
         });
         let current_voice = document.getElementById('current_voice') as HTMLOutputElement;
         current_voice.innerText = "🎙️ New Track ✅";
+        let currentSongName = document.getElementById('currentSongName') as HTMLOutputElement;
+        currentSongName.innerText = "🟣 Now Playing: " + model.getCurrentSongName();
     }
 
     return (
         <>
-            <p id='current_voice' className="currVoice">🎙️</p>
-            <p className="tooltipVoice">Voice commands</p>
-            <div className="listVoiceCommands">
-                <button className="btn btn-link close-button-list" onClick={toggleCollapse}>
-                    {isCollapsed ? <FaRegWindowMaximize /> : <FaRegWindowMinimize />}
-                </button>
-                <strong style={{ paddingRight: "60px" }}>Voice commands list</strong>
-                {!isCollapsed && (
-                    <ul>
-                        <li>🎙️ Start/Play</li>
-                        <li>🎙️ Pause/Stop</li>
-                        <li>🎙️ Repeat/Loop</li>
-                        <li>🎙️ Next</li>
-                    </ul>
-                )}
+            <div style={{ marginTop: "20px" }}>
+                <p id='current_voice' className="currGesture">🎙️</p>
+                <p className="tooltipGesture">Voice commands</p>
             </div>
         </>
     );

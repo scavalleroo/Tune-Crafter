@@ -17,6 +17,7 @@ const AudioWaveComponent = React.forwardRef<WaveSurfer | null, WaveformProps>(
         progressColor: '#0B060E',
         cursorColor: '#F5F5F5',
         cursorWidth: 3,
+        fillParent: true,
       });
 
       wavesurfer.load(audioUrl);
