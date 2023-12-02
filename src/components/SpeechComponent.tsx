@@ -132,6 +132,17 @@ const SpeechComponent = (props: SpeechComponentProps) => {
                         soundManager.newTrack();
                         currentMode.mode = "christmas";
                         break;
+                    case "piano":
+                        console.warn("piano");
+                        ReactGA.event({
+                            category: 'User Interaction',
+                            action: 'speech',
+                            label: 'Piano',
+                        });
+                        soundManager.setPianoSong();
+                        soundManager.newTrack();
+                        currentMode.mode = "piano";
+                        break;
                     case "normal":
                     case "reset":
                         console.warn("reset");

@@ -73,6 +73,7 @@ class SideBar extends Component {
                         <li>🎙️ Next</li>
                         <li><strong>🎙️ Christmas (MODE) 🎅🎄</strong></li>
                         <li><strong>🎙️ Normal (MODE)</strong></li>
+                        <li><strong>🎙️ Piano (MODE) 🎹</strong></li>
                     </ul>
                     <strong>Gestures 🙌</strong>
                     <br />

@@ -5,11 +5,13 @@ const LAURA_SONGS = [{path: "hiddenSounds/laura.mp3", name: "Måneskin - Ella ba
 const EMILIO_SONGS = [{path: "hiddenSounds/emilio.mp3", name: "Emilio's Track"}];
 const NINA_SONGS = [{path: "hiddenSounds/nina.mp3", name: "Love on the Brain (Rihanna Cover) by Nina <a target='_blank' href='https://www.instagram.com/ninamazza_/'>@ninamazza_</a>", shortName: "Love on the Brain (Rihanna Cover) by Nina"}];
 const CHRISTMAS_SONGS = [{path: "hiddenSounds/christmas.mp3", name: "Christmas Track"}];
+const PIANO_SONGS = [{path: "hiddenSounds/piano.wav", name: "Piano Track"}];
 
 export class AudioManager {
   private audioContext: AudioContext | null = null;
   private normalAudioBufferMap: Map<string, AudioBuffer>;  //With each sound
   private christmasAudioBufferMap: Map<string, AudioBuffer>;  //With each sound
+  private pianoAudioBufferMap: Map<string, AudioBuffer>;  //With each sound
   private currentSong: number = 0;
   private waveform: WaveSurfer | null = null;
   private speedValue: number = 1;
@@ -32,6 +34,7 @@ export class AudioManager {
   constructor(waveform: WaveSurfer | null) {
     this.normalAudioBufferMap = new Map();
     this.christmasAudioBufferMap = new Map();
+    this.pianoAudioBufferMap = new Map();
 
     this.waveform = waveform;
 
@@ -56,10 +59,16 @@ export class AudioManager {
     this.loadSound('middle', 'assets/sounds/snare.wav', "normal");
     this.loadSound('ring', 'assets/sounds/hat.wav', "normal");
     this.loadSound('pinky', 'assets/sounds/clap.wav', "normal");
+    
     this.loadSound('index', 'assets/sounds/christmas-little-bells.mp3', "christmas");
     this.loadSound('middle', 'assets/sounds/christmas-bell.mp3', "christmas");
     this.loadSound('ring', 'assets/sounds/christmas-ding.mp3', "christmas");
     this.loadSound('pinky', 'assets/sounds/merry-christmas.mp3', "christmas");
+
+    this.loadSound('index', 'assets/sounds/chords/faM.wav', "piano");
+    this.loadSound('middle', 'assets/sounds/chords/solm.wav', "piano");
+    this.loadSound('ring', 'assets/sounds/chords/rem.wav', "piano");
+    this.loadSound('pinky', 'assets/sounds/chords/sibM.wav', "piano");
   }
 
   // Load audio file and store it in the buffer
@@ -86,6 +95,9 @@ export class AudioManager {
       case "christmas":
         this.christmasAudioBufferMap.set(name, audioBuffer);
         break;
+      case "piano":
+        this.pianoAudioBufferMap.set(name, audioBuffer);
+        break;
       default:
         break;
     }
@@ -110,6 +122,11 @@ export class AudioManager {
         case "christmas":
           if (this.audioContext && this.christmasAudioBufferMap.has(name)) {
             source.buffer = this.christmasAudioBufferMap.get(name)!;
+          }
+          break;
+        case "piano":
+          if (this.audioContext && this.pianoAudioBufferMap.has(name)) {
+            source.buffer = this.pianoAudioBufferMap.get(name)!;
           }
           break;
         default:
@@ -169,6 +186,12 @@ export class AudioManager {
   setChristmasSong() {
     this.currentSong = 0;
     this.songs = CHRISTMAS_SONGS;
+    this.fireListeners();
+  }
+
+  setPianoSong() {
+    this.currentSong = 0;
+    this.songs = PIANO_SONGS;
     this.fireListeners();
   }
 
